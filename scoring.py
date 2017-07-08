@@ -10,7 +10,7 @@ class Scores:
     self.people_distances = people_distances
     self.car_balances = car_balances
     self.people_car_matrix = people_car_matrix
-    self.score = sum(car_distances) + sum(people_distances) + sum(car_balances)
+    self.total_score = sum(car_distances) + sum(people_distances) + sum(car_balances)
 
 class Scoring:
   def __init__(self, num_cars, num_people, num_sessions):

@@ -1,7 +1,7 @@
 from scoring import Scoring
 from output import output_dance_stats
 
-status_frequency = 10000
+status_frequency = 1000
 
 class Strategy(object):
   def __init__(self, name, random_dance_generator, scoring):
@@ -23,12 +23,15 @@ class Strategy(object):
       if count % status_frequency == 0:
         print()
         print(count)
-        output_dance_stats(self.best_scores)
+        self.output()
+
+  def output(self):
+    output_dance_stats(self.best_scores)
 
   def score_and_track(self, dance):
     """Scores a new dance and tracks best known for outputting"""
     scores = self.scoring.score(dance)
-    if self.best_scores is None or scores.score > self.best_scores.score:
+    if self.best_scores is None or scores.total_score > self.best_scores.total_score:
       self.best_scores = scores
     return scores
 

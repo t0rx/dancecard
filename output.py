@@ -1,7 +1,7 @@
 # Utility functions for outputting stuff
 
 def output_dance_stats(scores):
-  print(scores.score)
+  print(scores.total_score)
   print(format_dance(scores.dance))
   print("Car distance scores:", sum(scores.car_distances), scores.car_distances)
   print("People scores:", sum(scores.people_distances), scores.people_distances)
