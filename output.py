@@ -1,18 +1,18 @@
 # Utility functions for outputting stuff
 
-def output_dance_stats(scores, num_cars):
+def output_dance_stats(scores):
   print(scores.score)
-  print(format_dance(scores.dance, num_cars))
+  print(format_dance(scores.dance))
   print("Car distance scores:", sum(scores.car_distances), scores.car_distances)
   print("People scores:", sum(scores.people_distances), scores.people_distances)
   print("Car distribution scores:", sum(scores.car_balances), scores.car_balances)
   print(format_people_car_matrix(scores.people_car_matrix))
-  print()
   
 def format_people_car_matrix(m):
   return '\n'.join([' '.join([str(x) for x in car]) for car in m])
 
-def format_dance(dance, num_cars):
+def format_dance(dance):
+  num_cars = len(dance[0])
   result = ''
   for i in range(num_cars):
     result = result + ' '.join([format_pair(session[i]) for session in dance]) + '\n'
