@@ -1,3 +1,4 @@
+import sys
 from scoring import Scoring
 from output import output_dance_stats
 
@@ -14,19 +15,25 @@ class Strategy(object):
     """Override this to do work"""
     pass
 
-  def run(self):
-    print("Running %s" % self.name)
+  def run(self, cards_output_file=sys.stdout, stats_output_file=sys.stderr):
+    self.print_settings(file=stats_output_file)
     count = 0
+    last_output = None
     while True:
       count = count + 1
       self.iterate()
       if count % status_frequency == 0:
-        print()
-        print(count)
-        self.output()
+        self.output_stats(count, file=stats_output_file)
+        stats_output_file.flush()
+        if self.best_scores != last_output:
+          last_output = self.best_scores
+          output_dance_stats(last_output, cards_output_file)
 
-  def output(self):
-    output_dance_stats(self.best_scores)
+  def print_settings(self, file):
+    print("Algorithm=%s" % self.name, file=file)
+
+  def output_stats(self, count, file):
+    print(count, self.best_scores.total_score, file=file)
 
   def score_and_track(self, dance):
     """Scores a new dance and tracks best known for outputting"""

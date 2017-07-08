@@ -26,27 +26,34 @@ class Genetic(Strategy):
 
   def crossover_single_gene(self, dance1, dance2):
     """Creates two children by switching a single gene between the parents"""
-    child1 = list(dance1)   # Copying so we don't modify the originals
-    child2 = list(dance2)
     index = random.randrange(len(dance1))
-    child1[index] = dance2[index]
-    child2[index] = dance1[index]
-
+    child1 = dance1[: index] + dance2[index : index + 1] + dance1[index+1 :]
+    child2 = dance2[: index] + dance1[index : index + 1] + dance2[index+1 :]
     return child1, child2
 
-  def mutate(self, dance):
-    random_dance = self.random_dance_generator()
-    gene_index = random.randrange(len(dance))
-    result = list(dance)    # So we don't modify the original
-    result[gene_index] = random_dance[gene_index]
-    return result
+  def crossover_gene_range(self, dance1, dance2):
+    """Creates two children by switching a set of genes between the parents"""
+    index1 = random.randrange(len(dance1))
+    index2 = index1 + random.randrange(len(dance1) - index1)
+    child1 = dance1[: index1] + dance2[index1 : index2] + dance1[index2 :]
+    child2 = dance2[: index1] + dance1[index1 : index2] + dance2[index2 :]
+    return child1, child2
 
-  def output(self):
-    super(Genetic, self).output()
-    print (self.sumn, self.sumn2)
+  def mutate_single_gene(self, dance):
+    random_dance = self.random_dance_generator()
+    child1, child2 = self.crossover_single_gene(dance, random_dance)
+    return child1
+
+  def mutate_gene_range(self, dance):
+    random_dance = self.random_dance_generator()
+    child1, child2 = self.crossover_gene_range(dance, random_dance)
+    return child1
+
+  def output_stats(self, count, file):
+    """Override the default to also include stddev"""
     var = (self.sumn2 - (self.sumn * self.sumn / self.population_size)) / (self.population_size - 1)
     std_dev = math.sqrt(var)
-    print("Std dev: %d" % std_dev)
+    print(count, self.best_scores.total_score, std_dev, file=file)
 
   def find_best_index(self, num_selections):
     """Finds the fittest amongst a sample of n"""
