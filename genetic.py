@@ -39,6 +39,22 @@ class Genetic(Strategy):
     child2 = dance2[: index1] + dance1[index1 : index2] + dance2[index2 :]
     return child1, child2
 
+  def crossover_random_genes(self, dance1, dance2):
+    """Creates two children by randomly selecting between the parents for each gene"""
+    dance_size = len(dance1)
+    bitmask = random.getrandbits(dance_size)
+    child1=[None] * dance_size
+    child2=[None] * dance_size
+    for i in range(dance_size):
+      if bitmask & 1 == 0:
+        child1[i] = dance1[i]
+        child2[i] = dance2[i]
+      else:
+        child1[i] = dance2[i]
+        child2[i] = dance1[i]
+      bitmask = bitmask >> 1
+    return child1, child2
+
   def mutate_single_gene(self, dance):
     random_dance = self.random_dance_generator()
     child1, child2 = self.crossover_single_gene(dance, random_dance)

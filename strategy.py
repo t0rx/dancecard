@@ -20,7 +20,6 @@ class Strategy(object):
     count = 0
     last_output = None
     while True:
-      count = count + 1
       self.iterate()
       if count % status_frequency == 0:
         self.output_stats(count, file=stats_output_file)
@@ -28,6 +27,7 @@ class Strategy(object):
         if self.best_scores != last_output:
           last_output = self.best_scores
           output_dance_stats(last_output, cards_output_file)
+      count = count + 1
 
   def print_settings(self, file):
     print("Algorithm=%s" % self.name, file=file)

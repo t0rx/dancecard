@@ -11,6 +11,7 @@ class IncrementalGenetic(Genetic):
     # Select strategies
     #self.crossover = self.crossover_single_gene
     self.crossover = self.crossover_gene_range
+    #self.crossover = self.crossover_random_genes
     #self.mutate = self.mutate_single_gene
     self.mutate = self.mutate_gene_range
 
