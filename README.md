@@ -37,3 +37,13 @@ In `incremental_genetic.py`:
 * Set the number of individuals to choose each time either for the fittest to breed, or the individual to drop out of the population for the new child.
 * Set the mutation rate (likelihood is reciprocal of the specified number)
 * Set the strategies for crossover and mutation in the `__init__()` method
+
+
+Planned extensions
+------------------
+
+* Allow parameters to be specified on command-line
+* Explore "evolutionary strategies" where the algorithm parameters such as mutation rate or crossover strategy are themselves subject to selection and mutation
+* Allow particular slots to be specified in advance, constraining the solution (e.g. one person wants to drive a particular car in a specific session)
+* Support distributed computation - possibly by having nodes each evolve their own population but be able to pass their fittest to other nodes on a regular basis.  This would also allow mutliple different strategies to run concurrently and "compete".
+* Provide web UI
