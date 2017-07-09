@@ -1,14 +1,14 @@
 import random
 import math
-from strategy import Strategy
+from strategy import Strategy, Candidate
 from output import format_dance
 
 class Genetic(Strategy):
   def __init__(self, name, population_size, random_dance_generator, scoring):
     super(Genetic, self).__init__(name, random_dance_generator, scoring)
     self.population_size = population_size
-    self.population = self.generate_population()    # List of dances with scores
-    scores = [s.total_score for s in self.population]
+    self.population = self.generate_population()    # List of candidates
+    scores = [c.scores.total_score for c in self.population]
     self.sumn = sum(scores)
     self.sumn2 = sum([x * x for x in scores])
 
@@ -16,13 +16,13 @@ class Genetic(Strategy):
     pass
 
   def replace(self, index, new_dance):
-    old_scores = self.population[index]
-    new_scores = self.score_and_track(new_dance)
-    self.population[index] = new_scores
+    old_candidate = self.population[index]
+    new_candidate = self.create_and_track_candidate(new_dance)
+    self.population[index] = new_candidate
 
     # Update stats
-    self.sumn = self.sumn - old_scores.total_score + new_scores.total_score
-    self.sumn2 = self.sumn2 - (old_scores.total_score * old_scores.total_score) + (new_scores.total_score * new_scores.total_score)
+    self.sumn = self.sumn - old_candidate.scores.total_score + new_candidate.scores.total_score
+    self.sumn2 = self.sumn2 - (old_candidate.scores.total_score * old_candidate.scores.total_score) + (new_candidate.scores.total_score * new_candidate.scores.total_score)
 
   def crossover_single_gene(self, dance1, dance2):
     """Creates two children by switching a single gene between the parents"""
@@ -61,15 +61,16 @@ class Genetic(Strategy):
     return child1
 
   def mutate_gene_range(self, dance):
-    random_dance = self.random_dance_generator()
+    random_dance = self.generate_dance()
     child1, child2 = self.crossover_gene_range(dance, random_dance)
     return child1
 
   def output_stats(self, count, file):
     """Override the default to also include stddev"""
+    mean = self.sumn / self.population_size
     var = (self.sumn2 - (self.sumn * self.sumn / self.population_size)) / (self.population_size - 1)
     std_dev = math.sqrt(var)
-    print(count, self.best_scores.total_score, std_dev, file=file)
+    print(count, self._best_candidate.scores.total_score, mean, std_dev, file=file)
 
   def find_best_index(self, num_selections):
     """Finds the fittest amongst a sample of n"""
@@ -77,7 +78,7 @@ class Genetic(Strategy):
     best_scores = None
     for i in range(num_selections):
       index = random.randrange(self.population_size)
-      scores = self.population[index]
+      scores = self.population[index].scores
       if best_index == -1 or scores.total_score > best_scores.total_score:
         best_index = index
         best_scores = scores
@@ -89,7 +90,7 @@ class Genetic(Strategy):
     best_scores = None
     for i in range(num_selections):
       index = random.randrange(self.population_size)
-      scores = self.population[index]
+      scores = self.population[index].scores
       if best_index == -1 or scores.total_score < best_scores.total_score:
         best_index = index
         best_scores = scores
@@ -97,5 +98,5 @@ class Genetic(Strategy):
 
   def generate_population(self):
     print("Generating initial population of size %s" % self.population_size)
-    return [self.generate_and_score() for i in range(self.population_size)]
+    return [self.create_and_track_candidate(self.generate_dance()) for i in range(self.population_size)]
 

@@ -1,9 +1,10 @@
 # Utility functions for outputting stuff
 import sys
 
-def output_dance_stats(scores, file=sys.stdout):
+def output_dance_stats(candidate, file=sys.stdout):
+  scores = candidate.scores
   print(scores.total_score, file=file)
-  print(format_dance(scores.dance), file=file)
+  print(format_dance(candidate.dance), file=file)
   print("Car distance scores:", sum(scores.car_distances), scores.car_distances, file=file)
   print("People scores:", sum(scores.people_distances), scores.people_distances, file=file)
   print("Car distribution scores:", sum(scores.car_balances), scores.car_balances, file=file)

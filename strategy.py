@@ -4,12 +4,17 @@ from output import output_dance_stats
 
 status_frequency = 1000
 
+class Candidate(object):
+  def __init__(self, dance, scores):
+    self.dance = dance
+    self.scores = scores
+
 class Strategy(object):
   def __init__(self, name, random_dance_generator, scoring):
     self.name = name
-    self.random_dance_generator = random_dance_generator
-    self.scoring = scoring
-    self.best_scores = None
+    self._random_dance_generator = random_dance_generator
+    self._scoring = scoring
+    self._best_candidate = None
 
   def iterate(self):
     """Override this to do work"""
@@ -24,8 +29,8 @@ class Strategy(object):
       if count % status_frequency == 0:
         self.output_stats(count, file=stats_output_file)
         stats_output_file.flush()
-        if self.best_scores != last_output:
-          last_output = self.best_scores
+        if self._best_candidate != last_output:
+          last_output = self._best_candidate
           output_dance_stats(last_output, cards_output_file)
       count = count + 1
 
@@ -33,16 +38,24 @@ class Strategy(object):
     print("Algorithm=%s" % self.name, file=file)
 
   def output_stats(self, count, file):
-    print(count, self.best_scores.total_score, file=file)
+    print(count, self._best_candidate.scores.total_score, file=file)
 
-  def score_and_track(self, dance):
-    """Scores a new dance and tracks best known for outputting"""
-    scores = self.scoring.score(dance)
-    if self.best_scores is None or scores.total_score > self.best_scores.total_score:
-      self.best_scores = scores
-    return scores
+  def generate_dance(self):
+    return self._random_dance_generator()
 
-  def generate_and_score(self):
-    """Generates a new random dance and scores it, updating best known scores"""
-    d = self.random_dance_generator()
-    return self.score_and_track(d)
+  def create_candidate(self, dance):
+    scores = self.score(dance)
+    return Candidate(dance, scores)
+
+  def create_and_track_candidate(self, dance):
+    """Creates a new Candidate for the dance, updating best known scores"""
+    candidate = self.create_candidate(dance)
+    self.track_best(candidate)
+    return candidate
+
+  def score(self, dance):
+    return self._scoring.score(dance)
+
+  def track_best(self, candidate):
+    if self._best_candidate is None or candidate.scores.total_score > self._best_candidate.scores.total_score:
+      self._best_candidate = candidate
