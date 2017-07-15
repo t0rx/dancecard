@@ -32,6 +32,7 @@ class Strategy(object):
         if self._best_candidate != last_output:
           last_output = self._best_candidate
           output_dance_stats(last_output, cards_output_file)
+          cards_output_file.flush()
       count = count + 1
 
   def print_settings(self, file):
