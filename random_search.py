@@ -1,7 +1,7 @@
 from strategy import Strategy, Candidate
 
 class RandomSearch(Strategy):
-  def __init__(self, random_dance_generator, scoring):
+  def __init__(self, args, random_dance_generator, scoring):
     super(RandomSearch, self).__init__("random search", random_dance_generator, scoring)
 
   def iterate(self):
