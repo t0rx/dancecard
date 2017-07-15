@@ -20,7 +20,21 @@ class FileBestOutputter(Publisher):
     self.file = file
 
   def publish_best(self, best):
-    output_dance_stats(best, self.file)
+    print(best.scores.total_score, file=self.file)
+    print(format_dance(best.dance), file=self.file)
+    self.file.flush()
+
+
+class FileDetailedScoresOutputter(Publisher):
+  def __init__(self, file):
+    self.file = file
+
+  def publish_best(self, best):
+    scores = best.scores
+    print("Car distance scores:", sum(scores.car_distances), scores.car_distances, file=self.file)
+    print("People scores:", sum(scores.people_distances), scores.people_distances, file=self.file)
+    print("Car distribution scores:", sum(scores.car_balances), scores.car_balances, file=self.file)
+    print(format_people_car_matrix(scores.people_car_matrix), file=self.file)
     self.file.flush()
 
 
@@ -75,16 +89,6 @@ class Multipublisher(Publisher):
       p.publish_settings(settings)
 
 
-def output_dance_stats(candidate, file=sys.stdout):
-  scores = candidate.scores
-  print(scores.total_score, file=file)
-  print(format_dance(candidate.dance), file=file)
-  print("Car distance scores:", sum(scores.car_distances), scores.car_distances, file=file)
-  print("People scores:", sum(scores.people_distances), scores.people_distances, file=file)
-  print("Car distribution scores:", sum(scores.car_balances), scores.car_balances, file=file)
-  print(format_people_car_matrix(scores.people_car_matrix), file=file)
-  print(file=file)
-  
 def format_people_car_matrix(m):
   return '\n'.join([' '.join([str(x) for x in car]) for car in m])
 

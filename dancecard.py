@@ -28,6 +28,10 @@ def build_parser():
   group.add_argument('--fittest-selections', metavar='N', type=int, default=5, help='number of individuals to sample for best-of-n fittest selection strategy (default 5)')
   group.add_argument('--weakest-selections', metavar='N', type=int, default=5, help='number of individuals to sample for worst-of-n weakest selection strategy (default 5)')
 
+  group = parser.add_argument_group('output controls')
+  group.add_argument('--output-stats', action='store_true', help='Outputs ongoing statistics to stderr')
+  group.add_argument('--score-details', action='store_true', help='Outputs details of score calculation with each dance card')
+
   mqtt_group = parser.add_argument_group('MQTT settings')
   mqtt_group.add_argument('--mqtt-host', help='MQTT broker host[:port].  If specified, this will cause the process to connect to the MQTT broker and publish state information')
   mqtt_group.add_argument('--mqtt-topic', default='dancecard', help='Root topic for MQTT, below which nodes will publish state (default "dancecard")')
@@ -69,6 +73,7 @@ def run_strategy(strategy, publishers, cards_output_file=sys.stdout, stats_outpu
     strategy.iterate()
     if strategy.best_candidate != last_output:
       last_output = strategy.best_candidate
+      print()
       publishers.publish_best(last_output)
     if count % status_frequency == 0:
       best, mean, std_dev = strategy.get_stats()
@@ -86,7 +91,10 @@ def generate_random_dance(possible_sessions, num_sessions):
 def get_publishers(args):
   publishers = output.Multipublisher()
   publishers.add(output.FileBestOutputter(sys.stdout))
-  publishers.add(output.FileStatsOutputter(sys.stderr))
+  if args.score_details:
+    publishers.add(output.FileDetailedScoresOutputter(sys.stdout))
+  if args.output_stats:
+    publishers.add(output.FileStatsOutputter(sys.stderr))
   publishers.add(output.FileScenarioOutputter(sys.stderr))
   publishers.add(output.FileSettingsOutputter(sys.stderr))
   if args.mqtt_host:
