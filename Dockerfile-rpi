@@ -5,4 +5,4 @@ WORKDIR /opt/dancecard
 
 COPY *.py ./
 
-ENTRYPOINT [ "./dancecard.py" ]
+ENTRYPOINT [ "python3", "./dancecard.py" ]
