@@ -6,12 +6,16 @@ from output import Publisher, format_dance
 class PubSub(Publisher):
   def __init__(self, args):
     host = args.mqtt_host
+    port = 1883
+    if ':' in host:
+      host, port = host.split(':')
+      port = int(port)
     node_id = newNodeId()
     self.topic = args.mqtt_topic + '/' + node_id
 
     self.client = mqtt.Client()
-    print("Connecting to MQTT broker at %s under %s" % (host, self.topic))
-    self.client.connect(host)
+    print("Connecting to MQTT broker at %s:%d under %s" % (host, port, self.topic))
+    self.client.connect(host, port=port)
     self.client.loop_start()
     #self.client.publish(topic + '/alive', payload='True')
     #self.client.will_set(topic + '/alive', payload='False')
