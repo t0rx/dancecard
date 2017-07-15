@@ -2,6 +2,17 @@ import random
 from genetic import Genetic
 
 class IncrementalGenetic(Genetic):
+  """
+    Genetic algorithm which incrementally selects two fit parents as the best of n samples, creates two offspring via crossover and mutation
+    and replaces two weak members of the population with the offspring.
+
+    Parameters applicable to this strategy:
+      --population N
+      --mutation-rate N
+      --fittest-selections N
+      --weakest-selections N
+  """
+
   def __init__(self, command_args, random_dance_generator, scoring):
     super(IncrementalGenetic, self).__init__("incremental genetic", command_args.population, random_dance_generator, scoring)
 

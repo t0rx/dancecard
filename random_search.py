@@ -1,6 +1,10 @@
 from strategy import Strategy, Candidate
 
 class RandomSearch(Strategy):
+  """
+    Randomly generates a completely new dancecard each iteration.  Not advised for real use.
+  """
+
   def __init__(self, args, random_dance_generator, scoring):
     super(RandomSearch, self).__init__("random search", random_dance_generator, scoring)
 
