@@ -1,4 +1,4 @@
-FROM python:3
+FROM t0rx/rpi-python3
 
 RUN mkdir -p /opt/dancecard
 WORKDIR /opt/dancecard

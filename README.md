@@ -15,7 +15,7 @@ This is an algorithm to solve the "driving trip" problem:
 Running the algorithm
 ---------------------
 
-The simplest way is to download the source and run `./dancecard.py`.  Alternatively, you can run as a Docker image with `docker run -it --rm t0rx/dancecard`.
+The simplest way is to download the source and run `./dancecard.py`.  Alternatively, you can run as a Docker image with `docker run -it --rm t0rx/dancecard` (or `docker run -it --rm t0rx/rpi-dancecard` if you're on a Raspberry Pi).
 
 The algorithm outputs new high-scoring dancecards, and also a running total of key stats:
 * number of iterations

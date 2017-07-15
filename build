@@ -17,7 +17,7 @@ if ! docker info >/dev/null 2>&1 ; then
    exit 1
 fi
 
-if [ "`uname -n`" == "raspberrypi" ]; then
+if [[ `uname -n` == raspberrypi* ]]; then
   REPO=$DOCKERUSER/rpi-$IMAGE
   DOCKERFILE=Dockerfile-rpi
 else
@@ -27,7 +27,7 @@ fi
 FROMLINE=(`grep FROM $DOCKERFILE`)
 BASEIMAGE=${FROMLINE[1]}
 
-echo Building $REPO:$DATE
+echo Building $REPO:$DATE from $DOCKERFILE
 docker pull $BASEIMAGE  # Make sure we're up to date
 docker build -t $REPO:$DATE -f $DOCKERFILE .
 docker tag $REPO:$DATE $REPO:latest
