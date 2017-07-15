@@ -1,5 +1,8 @@
 FROM t0rx/rpi-python3
 
+RUN pip install paho-mqtt
+# Note that pyyaml is already installed in the base image
+
 RUN mkdir -p /opt/dancecard
 WORKDIR /opt/dancecard
 

@@ -7,6 +7,8 @@ class Genetic(Strategy):
   def __init__(self, name, population_size, random_dance_generator, scoring):
     super(Genetic, self).__init__(name, random_dance_generator, scoring)
     self.population_size = population_size
+
+  def startup(self):
     self.population = self.generate_population()    # List of candidates
     scores = [c.scores.total_score for c in self.population]
     self.sumn = sum(scores)
@@ -65,12 +67,12 @@ class Genetic(Strategy):
     child1, child2 = self.crossover_gene_range(dance, random_dance)
     return child1
 
-  def output_stats(self, count, file):
-    """Override the default to also include stddev"""
+  def get_stats(self):
+    # best score, mean, std dev
     mean = self.sumn / self.population_size
     var = (self.sumn2 - (self.sumn * self.sumn / self.population_size)) / (self.population_size - 1)
     std_dev = math.sqrt(var)
-    print(count, self._best_candidate.scores.total_score, mean, std_dev, file=file)
+    return self.best_candidate.scores.total_score, mean, std_dev
 
   def find_best_index(self, num_selections):
     """Finds the fittest amongst a sample of n"""

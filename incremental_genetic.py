@@ -43,12 +43,12 @@ class IncrementalGenetic(Genetic):
     reject_index2 = self.find_worst_index(self.weakest_selections)
     self.replace(reject_index2, child2)
 
-  def print_settings(self, file):
-    super(IncrementalGenetic, self).print_settings(file)
-    print("Population size=%d" % self.population_size, file=file)
-    print("Fittest selection size=%d" % self.fittest_selections, file=file)
-    print("Weakest selection size=%d" % self.weakest_selections, file=file)
-    print("Mutation rate=%d" % self.mutation_rate, file=file)
-    print("Mutation=%s" % self.mutate, file=file)
-    print("Crossover=%s" % self.crossover, file=file)
-    print(file=file)
+  def get_settings(self):
+    result = super(IncrementalGenetic, self).get_settings()
+    result['Population size'] = self.population_size
+    result['Fittest selection size'] = self.fittest_selections
+    result['Weakest selection size'] = self.weakest_selections
+    result['Mutation rate'] = self.mutation_rate
+    result['Mutation'] = self.mutate.__name__
+    result['Crossover'] = self.crossover.__name__
+    return result

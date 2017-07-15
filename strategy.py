@@ -1,8 +1,4 @@
-import sys
 from scoring import Scoring
-from output import output_dance_stats
-
-status_frequency = 1000
 
 class Candidate(object):
   def __init__(self, dance, scores):
@@ -14,32 +10,22 @@ class Strategy(object):
     self.name = name
     self._random_dance_generator = random_dance_generator
     self._scoring = scoring
-    self._best_candidate = None
+    self.best_candidate = None
+
+  def startup(self):
+    """Override to do some start-up actions such as priming the population"""
+    pass
 
   def iterate(self):
     """Override this to do work"""
     pass
 
-  def run(self, cards_output_file=sys.stdout, stats_output_file=sys.stderr):
-    self.print_settings(file=stats_output_file)
-    count = 0
-    last_output = None
-    while True:
-      self.iterate()
-      if count % status_frequency == 0:
-        self.output_stats(count, file=stats_output_file)
-        stats_output_file.flush()
-        if self._best_candidate != last_output:
-          last_output = self._best_candidate
-          output_dance_stats(last_output, cards_output_file)
-          cards_output_file.flush()
-      count = count + 1
+  def get_settings(self):
+    return {'Strategy': self.name}
 
-  def print_settings(self, file):
-    print("Algorithm=%s" % self.name, file=file)
-
-  def output_stats(self, count, file):
-    print(count, self._best_candidate.scores.total_score, file=file)
+  def get_stats(self):
+    # best score, mean, std dev
+    return self.best_candidate.scores.total_score, self.best_candidate.scores.total_score, 0
 
   def generate_dance(self):
     return self._random_dance_generator()
@@ -58,5 +44,5 @@ class Strategy(object):
     return self._scoring.score(dance)
 
   def track_best(self, candidate):
-    if self._best_candidate is None or candidate.scores.total_score > self._best_candidate.scores.total_score:
-      self._best_candidate = candidate
+    if self.best_candidate is None or candidate.scores.total_score > self.best_candidate.scores.total_score:
+      self.best_candidate = candidate

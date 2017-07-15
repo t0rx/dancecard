@@ -1,6 +1,80 @@
 # Utility functions for outputting stuff
 import sys
 
+class Publisher(object):
+  def publish_scenario(self, cars, people, sessions):
+    pass
+
+  def publish_stats(self, count, best, mean, std_dev):
+    pass
+
+  def publish_best(self, best):
+    pass
+
+  def publish_settings(self, settings):
+    pass
+
+
+class FileBestOutputter(Publisher):
+  def __init__(self, file):
+    self.file = file
+
+  def publish_best(self, best):
+    output_dance_stats(best, self.file)
+    self.file.flush()
+
+
+class FileStatsOutputter(Publisher):
+  def __init__(self, file):
+    self.file = file
+
+  def publish_stats(self, count, best, mean, std_dev):
+    print(count, best, mean, std_dev, file=self.file)
+    self.file.flush()
+
+
+class FileSettingsOutputter(Publisher):
+  def __init__(self, file):
+    self.file = file
+
+  def publish_settings(self, settings):
+    print(settings, file=self.file)
+    self.file.flush()
+
+
+class FileScenarioOutputter(Publisher):
+  def __init__(self, file):
+    self.file = file
+
+  def publish_scenario(self, cars, people, sessions):
+    print("Cars: %d, people: %d, sessions: %d" % (cars, people, sessions), file=self.file)
+    self.file.flush()
+
+
+class Multipublisher(Publisher):
+  def __init__(self):
+    self.sub_publishers = []
+
+  def add(self, publisher):
+    self.sub_publishers.append(publisher)
+
+  def publish_scenario(self, cars, people, sessions):
+    for p in self.sub_publishers:
+      p.publish_scenario(cars, people, sessions)
+
+  def publish_stats(self, count, best, mean, std_dev):
+    for p in self.sub_publishers:
+      p.publish_stats(count, best, mean, std_dev)
+
+  def publish_best(self, best):
+    for p in self.sub_publishers:
+      p.publish_best(best)
+
+  def publish_settings(self, settings):
+    for p in self.sub_publishers:
+      p.publish_settings(settings)
+
+
 def output_dance_stats(candidate, file=sys.stdout):
   scores = candidate.scores
   print(scores.total_score, file=file)
