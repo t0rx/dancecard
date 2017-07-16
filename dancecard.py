@@ -3,13 +3,13 @@ import sys
 import argparse
 import random
 from scoring import Scoring
-from sessions import get_possible_sessions
 from random_search import RandomSearch
 from incremental_genetic import IncrementalGenetic
 import output
 from mqtt import MQTTPublisher, MQTTClient
 from util import new_scenario_id
 from sessions import Scenario
+from driver import StrategyDriver
 
 random.seed()
 
@@ -104,47 +104,13 @@ def stop(args):
   print('Published stop command.')
 
 def standalone(args):
-  scenario = get_scenario(args)
-
   mqtt_client = MQTTClient(args) if args.mqtt_host else None
-
   publishers = get_publishers(args, mqtt_client)
-  publishers.publish_scenario(scenario)
-
-  possible_sessions = get_possible_sessions(scenario)
-  generator = lambda : generate_random_dance(possible_sessions, scenario)
+  scenario = get_scenario(args)
   scoring = Scoring(scenario)
-
-  strategy = strategies[args.strategy](args, generator, scoring)
-  publishers.publish_settings(strategy.get_settings())
-  try:
-    run_strategy(strategy, publishers)
-  except KeyboardInterrupt:
-    print('Interrupted')
-
-def run_strategy(strategy, publishers, cards_output_file=sys.stdout, stats_output_file=sys.stderr):
-  strategy.startup()
-  count = 0
-  last_output = None
-  while True:
-    strategy.iterate()
-    if strategy.best_candidate != last_output:
-      last_output = strategy.best_candidate
-      print()
-      publishers.publish_best(last_output)
-    if count % status_frequency == 0:
-      best, mean, std_dev = strategy.get_stats()
-      publishers.publish_stats(count, best, mean, std_dev)
-    count = count + 1
- 
-def generate_random_dance(possible_sessions, scenario):
-  num_sessions = scenario.num_sessions
-  sessions = len(possible_sessions)
-  dance = []
-  for i in range(num_sessions):
-    r = random.randrange(0, sessions)
-    dance.append(possible_sessions[r])
-  return dance
+  driver = StrategyDriver(scenario, publishers)
+  strategy = strategies[args.strategy](args, driver.generate_random_dance, scoring)
+  driver.run_strategy(strategy)
 
 def get_publishers(args, mqtt_client=None):
   publishers = output.Multipublisher()
