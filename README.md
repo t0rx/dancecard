@@ -11,39 +11,18 @@ This is an algorithm to solve the "driving trip" problem:
   * Everyone driving with everyone else evenly
   * Minimising repetition - e.g. driving same car or with same person in nearby sessions
 
-
-Running the algorithm
----------------------
-
-The simplest way is to download the source and run `./dancecard.py`.  Alternatively, you can run as a Docker image with `docker run -it --rm t0rx/dancecard` (or `docker run -it --rm t0rx/rpi-dancecard` if you're on a Raspberry Pi).
-
-The algorithm outputs new high-scoring dancecards, and also a running total of key stats:
-* number of iterations
-* best score
-* population mean
-* population standard deviation
+For full documentation, see the wiki page at https://github.com/t0rx/dancecard/wiki,
 
 
-Customising the algorithm
--------------------------
-
-At the moment, this is done in code, but will be moved to command-line options at some point.
-
-In `dancecard.py`:
-* Set the number of cars, sessions, population size through the params at the top
-* Choose which algorithm in `main()`
-
-In `incremental_genetic.py`:
-* Set the number of individuals to choose each time either for the fittest to breed, or the individual to drop out of the population for the new child.
-* Set the mutation rate (likelihood is reciprocal of the specified number)
-* Set the strategies for crossover and mutation in the `__init__()` method
-
-
-Planned extensions
+Build instructions
 ------------------
 
-* Allow parameters to be specified on command-line
-* Explore "evolutionary strategies" where the algorithm parameters such as mutation rate or crossover strategy are themselves subject to selection and mutation
-* Allow particular slots to be specified in advance, constraining the solution (e.g. one person wants to drive a particular car in a specific session)
-* Support distributed computation - possibly by having nodes each evolve their own population but be able to pass their fittest to other nodes on a regular basis.  This would also allow mutliple different strategies to run concurrently and "compete".
-* Provide web UI
+`dancecard.py` should run directly as long as you have [pyyaml](http://pyyaml.org/wiki/PyYAMLDocumentation) and [paho-mqtt](https://pypi.python.org/pypi/paho-mqtt/1.1) installed.  See those links for installation instructions.
+
+To build the Docker images, run `./build` (you may need to do this under sudo if you haven't [given your user docker perms](https://docs.docker.com/engine/installation/linux/linux-postinstall/)).  You may want to edit the build script to change the docker repo user away from `t0rx`.
+
+The build script should automatically detect if you're building on a Raspberry Pi and switch to Dockerfile-rpi rather than Dockerfile.  This depends on a couple of base images I maintain, but could easily be made standalone.
+
+Enjoy,
+
+`t0rx`
