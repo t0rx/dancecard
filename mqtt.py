@@ -5,7 +5,7 @@ from util import new_node_id, split_host_port
 
 class MQTTClient(object):
   def __init__(self, args):
-    self.node_id = 'N-' + new_node_id()
+    self.node_id = new_node_id()
     self.root_topic = args.mqtt_topic
 
     self.client = mqtt.Client()
@@ -13,9 +13,13 @@ class MQTTClient(object):
     print("Connecting to MQTT broker at %s:%d under topic '%s' for node %s" % (host, port, self.root_topic, self.node_id))
     self.client.connect(host, port=port)
     self.client.loop_start()
+    self.client.subscribe(self.root_topic + '/#', qos=1)
 
   def publishYaml(self, subtopic, data, retain=False):
     self.client.publish(self.root_topic + '/' + subtopic, yaml.dump(data), retain=retain)
+
+  def subscribe(self, subtopic, callback):
+    self.client.message_callback_add(self.root_topic + '/' + subtopic, lambda client, userdata, message: callback(message))
 
   def stop_loop(self):
     self.client.loop_stop()

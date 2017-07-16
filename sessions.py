@@ -10,6 +10,10 @@ class Scenario(object):
   def to_dict(self):
     return {'scenario': self.id, 'cars': self.num_cars, 'people': self.num_people, 'sessions': self.num_sessions}
 
+  @staticmethod
+  def from_dict(d):
+    return Scenario(d['scenario'], int(d['cars']), int(d['people']), int(d['sessions']))
+
 
 def get_possible_sessions(scenario):
   pairs = get_pairs(scenario.num_people)

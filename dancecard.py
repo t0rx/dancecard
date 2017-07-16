@@ -2,6 +2,7 @@
 import sys
 import argparse
 import random
+from time import sleep
 from scoring import Scoring
 from random_search import RandomSearch
 from incremental_genetic import IncrementalGenetic
@@ -10,6 +11,7 @@ from mqtt import MQTTPublisher, MQTTClient
 from util import new_scenario_id
 from sessions import Scenario
 from driver import StrategyDriver
+from worker import Worker
 
 random.seed()
 
@@ -106,11 +108,30 @@ def stop(args):
 def standalone(args):
   mqtt_client = MQTTClient(args) if args.mqtt_host else None
   publishers = get_publishers(args, mqtt_client)
+  strategy_factory = lambda generator, scoring: strategies[args.strategy](args, generator, scoring)
   scenario = get_scenario(args)
-  scoring = Scoring(scenario)
-  driver = StrategyDriver(scenario, publishers)
-  strategy = strategies[args.strategy](args, driver.generate_random_dance, scoring)
-  driver.run_strategy(strategy)
+  driver = StrategyDriver(scenario, strategy_factory, publishers)
+  try:
+    driver.run_strategy()
+  except KeyboardInterrupt:
+    print('Interrupted', file=sys.stderr)
+
+def worker(args):
+  if not args.mqtt_host:
+    print("Must specify MQTT host for worker command.", file=sys.stderr)
+    exit(1)
+  mqtt_client = MQTTClient(args)
+  publishers = get_publishers(args, mqtt_client)
+  strategy_factory = lambda generator, scoring: strategies[args.strategy](args, generator, scoring)
+  worker = Worker(mqtt_client, strategy_factory, publishers)
+  worker.listen()
+  try:
+    # Just loop until we get killed
+    while True:
+      sleep(100)
+  except KeyboardInterrupt:
+    print('Keyboard interrupt.  Stopping.')
+    worker.stop()
 
 def get_publishers(args, mqtt_client=None):
   publishers = output.Multipublisher()

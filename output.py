@@ -53,7 +53,7 @@ class FileSettingsOutputter(Publisher):
     self.file = file
 
   def publish_settings(self, settings):
-    print(settings, file=self.file)
+    print('Strategy settings: %s' % str(settings), file=self.file)
     self.file.flush()
 
 
@@ -62,7 +62,7 @@ class FileScenarioOutputter(Publisher):
     self.file = file
 
   def publish_scenario(self, scenario):
-    print("Secanrio: %s, cars: %d, people: %d, sessions: %d" % (scenario.id, scenario.num_cars, scenario.num_people, scenario.num_sessions), file=self.file)
+    print("Scenario: %s, cars: %d, people: %d, sessions: %d" % (scenario.id, scenario.num_cars, scenario.num_people, scenario.num_sessions), file=self.file)
     self.file.flush()
 
 
