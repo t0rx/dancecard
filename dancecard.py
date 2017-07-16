@@ -7,7 +7,7 @@ from sessions import get_possible_sessions
 from random_search import RandomSearch
 from incremental_genetic import IncrementalGenetic
 import output
-from pubsub import PubSub
+from pubsub import PubSub, MQTTClient
 
 random.seed()
 
@@ -98,7 +98,7 @@ def get_publishers(args):
   publishers.add(output.FileScenarioOutputter(sys.stderr))
   publishers.add(output.FileSettingsOutputter(sys.stderr))
   if args.mqtt_host:
-    publishers.add(PubSub(args))
+    publishers.add(PubSub(MQTTClient(args)))
   return publishers
 
 def help(args):

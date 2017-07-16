@@ -3,7 +3,7 @@ import yaml
 import paho.mqtt.client as mqtt
 from output import Publisher, format_dance
 
-class PubSub(Publisher):
+class MQTTClient(object):
   def __init__(self, args):
     host = args.mqtt_host
     port = 1883
@@ -17,23 +17,29 @@ class PubSub(Publisher):
     print("Connecting to MQTT broker at %s:%d under %s" % (host, port, self.topic))
     self.client.connect(host, port=port)
     self.client.loop_start()
-    #self.client.publish(topic + '/alive', payload='True')
-    #self.client.will_set(topic + '/alive', payload='False')
+
+  def publishYaml(self, subtopic, data, retain=False):
+    self.client.publish(self.topic + '/' + subtopic, yaml.dump(data), retain=retain)
+
+
+class PubSub(Publisher):
+  def __init__(self, mqttClient):
+    self.client = mqttClient
 
   def publish_scenario(self, cars, people, sessions):
     data = {'cars': cars, 'people': people, 'sessiosn': sessions}
-    self.client.publish(self.topic + '/scenario', yaml.dump(data), retain=True)
+    self.client.publishYaml('scenario', data, retain=True)
 
   def publish_stats(self, count, best, mean, std_dev):
     stats = {'count': count, 'best': best, 'mean': mean, 'std_dev': std_dev}
-    self.client.publish(self.topic + '/stats', yaml.dump(stats))
+    self.client.publishYaml('stats', stats)
 
   def publish_best(self, best):
     data = {'score': best.scores.total_score, 'dance': format_dance(best.dance)}
-    self.client.publish(self.topic + '/best', yaml.dump(data), retain=True)
+    self.client.publishYaml('best', data, retain=True)
 
   def publish_settings(self, settings):
-    self.client.publish(self.topic + '/settings', yaml.dump(settings), retain=True)
+    self.client.publishYaml('settings', settings, retain=True)
 
 
 def newNodeId():
