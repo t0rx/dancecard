@@ -27,7 +27,7 @@ class PubSub(Publisher):
     self.client = mqttClient
 
   def publish_scenario(self, cars, people, sessions):
-    data = {'cars': cars, 'people': people, 'sessiosn': sessions}
+    data = {'cars': cars, 'people': people, 'sessions': sessions}
     self.client.publishYaml('scenario', data, retain=True)
 
   def publish_stats(self, count, best, mean, std_dev):
