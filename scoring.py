@@ -13,12 +13,12 @@ class Scores:
     self.total_score = sum(car_distances) + sum(people_distances) + sum(car_balances)
 
 class Scoring:
-  def __init__(self, num_cars, num_people, num_sessions):
-    self.num_cars = num_cars
-    self.num_people = num_people
-    self.num_sessions = num_sessions
-    self.car_distance_weights = [0, -5] + list(range(1, num_sessions))
-    self.people_distance_weights = [0, -5] + list(range(1, num_sessions))
+  def __init__(self, scenario):
+    self.num_cars = scenario.num_cars
+    self.num_people = scenario.num_people
+    self.num_sessions = scenario.num_sessions
+    self.car_distance_weights = [0, -5] + list(range(1, scenario.num_sessions))
+    self.people_distance_weights = [0, -5] + list(range(1, scenario.num_sessions))
 
   def score(self, d):
     car_distances = self.dance_car_distance(d)

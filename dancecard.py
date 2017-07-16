@@ -7,7 +7,9 @@ from sessions import get_possible_sessions
 from random_search import RandomSearch
 from incremental_genetic import IncrementalGenetic
 import output
-from pubsub import PubSub, MQTTClient
+from mqtt import MQTTPublisher, MQTTClient
+from util import new_scenario_id
+from sessions import Scenario
 
 random.seed()
 
@@ -47,6 +49,9 @@ def build_parser():
   start_parser.add_argument('-f', '--follow', action='store_true', help='continues to monitor status')
   command_parsers['start'] = start_parser
 
+  stop_parser = subparsers.add_parser('stop', help='stop the current distributed calc')
+  command_parsers['stop'] = stop_parser
+
   status_parser = subparsers.add_parser('status', help='show current status of a distributed calc')
   status_parser.add_argument('-f', '--follow', action='store_true', help='continues to monitor status')
   command_parsers['status'] = status_parser
@@ -63,25 +68,59 @@ def main():
 
   if args.command == 'help':
     help(args, command_parsers)
-    exit(0)
+  elif args.command == 'start':
+    start(args)
+  elif args.command == 'stop':
+    stop(args)
+  elif args.command == 'status':
+    status(args)
+  elif args.command == 'worker':
+    worker(args)
   else:
     standalone(args)
 
+def get_scenario(args, scenario_id = None):
+  if not scenario_id:
+    scenario_id = new_scenario_id()
+  return Scenario(scenario_id, args.cars, args.cars * 2, args.sessions)
+
+def start(args):
+  if not args.mqtt_host:
+    print("Must specify MQTT host for start command.", file=sys.stderr)
+    exit(1)
+  scenario = get_scenario(args)
+  mqtt_client = MQTTClient(args)
+  mqtt_client.publishYaml('control/active_scenario', scenario.to_dict(), retain=True)
+  mqtt_client.stop_loop()
+  print('Published scenario %s' + scenario.id)
+
+def stop(args):
+  if not args.mqtt_host:
+    print("Must specify MQTT host for start command.", file=sys.stderr)
+    exit(1)
+  mqtt_client = MQTTClient(args)
+  mqtt_client.publishYaml('control/active_scenario', {}, retain=True)
+  mqtt_client.stop_loop()
+  print('Published stop command.')
+
 def standalone(args):
-  num_cars = args.cars
-  num_people = num_cars * 2
-  num_sessions = args.sessions
+  scenario = get_scenario(args)
 
-  publishers = get_publishers(args)
-  publishers.publish_scenario(num_cars, num_people, num_sessions)
+  mqtt_client = MQTTClient(args) if args.mqtt_host else None
 
-  possible_sessions = get_possible_sessions(num_people, num_cars)
-  generator = lambda : generate_random_dance(possible_sessions, num_sessions)
-  scoring = Scoring(num_cars, num_people, num_sessions)
+  publishers = get_publishers(args, mqtt_client)
+  publishers.publish_scenario(scenario)
+
+  possible_sessions = get_possible_sessions(scenario)
+  generator = lambda : generate_random_dance(possible_sessions, scenario)
+  scoring = Scoring(scenario)
 
   strategy = strategies[args.strategy](args, generator, scoring)
   publishers.publish_settings(strategy.get_settings())
-  run_strategy(strategy, publishers)
+  try:
+    run_strategy(strategy, publishers)
+  except KeyboardInterrupt:
+    print('Interrupted')
 
 def run_strategy(strategy, publishers, cards_output_file=sys.stdout, stats_output_file=sys.stderr):
   strategy.startup()
@@ -98,7 +137,8 @@ def run_strategy(strategy, publishers, cards_output_file=sys.stdout, stats_outpu
       publishers.publish_stats(count, best, mean, std_dev)
     count = count + 1
  
-def generate_random_dance(possible_sessions, num_sessions):
+def generate_random_dance(possible_sessions, scenario):
+  num_sessions = scenario.num_sessions
   sessions = len(possible_sessions)
   dance = []
   for i in range(num_sessions):
@@ -106,7 +146,7 @@ def generate_random_dance(possible_sessions, num_sessions):
     dance.append(possible_sessions[r])
   return dance
 
-def get_publishers(args):
+def get_publishers(args, mqtt_client=None):
   publishers = output.Multipublisher()
   publishers.add(output.FileBestOutputter(sys.stdout))
   if args.score_details:
@@ -115,8 +155,8 @@ def get_publishers(args):
     publishers.add(output.FileStatsOutputter(sys.stderr))
   publishers.add(output.FileScenarioOutputter(sys.stderr))
   publishers.add(output.FileSettingsOutputter(sys.stderr))
-  if args.mqtt_host:
-    publishers.add(PubSub(MQTTClient(args)))
+  if mqtt_client:
+    publishers.add(MQTTPublisher(mqtt_client))
   return publishers
 
 def help(args, command_parsers):

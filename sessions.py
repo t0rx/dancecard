@@ -1,8 +1,20 @@
 # Session generator
 
-def get_possible_sessions(num_people, num_cars):
-  pairs = get_pairs(num_people)
+class Scenario(object):
+  def __init__(self, scenario_id, num_cars, num_people, num_sessions):
+    self.id = scenario_id
+    self.num_cars = num_cars
+    self.num_people = num_people
+    self.num_sessions = num_sessions
+
+  def to_dict(self):
+    return {'scenario': self.id, 'cars': self.num_cars, 'people': self.num_people, 'sessions': self.num_sessions}
+
+
+def get_possible_sessions(scenario):
+  pairs = get_pairs(scenario.num_people)
   num_pairs = len(pairs)
+  num_cars = scenario.num_cars
   indices = [0 for i in range(num_cars)]
   sessions = []
   while True:
@@ -15,7 +27,7 @@ def get_possible_sessions(num_people, num_cars):
     if i == num_cars:
       break
     session = [pairs[i] for i in indices]
-    if is_valid_session(session, num_people):
+    if is_valid_session(session, scenario.num_people):
       sessions.append(session)
   return sessions
 

@@ -1,8 +1,9 @@
 # Utility functions for outputting stuff
 import sys
+from sessions import Scenario
 
 class Publisher(object):
-  def publish_scenario(self, cars, people, sessions):
+  def publish_scenario(self, scenario):
     pass
 
   def publish_stats(self, count, best, mean, std_dev):
@@ -60,8 +61,8 @@ class FileScenarioOutputter(Publisher):
   def __init__(self, file):
     self.file = file
 
-  def publish_scenario(self, cars, people, sessions):
-    print("Cars: %d, people: %d, sessions: %d" % (cars, people, sessions), file=self.file)
+  def publish_scenario(self, scenario):
+    print("Secanrio: %s, cars: %d, people: %d, sessions: %d" % (scenario.id, scenario.num_cars, scenario.num_people, scenario.num_sessions), file=self.file)
     self.file.flush()
 
 
@@ -72,9 +73,9 @@ class Multipublisher(Publisher):
   def add(self, publisher):
     self.sub_publishers.append(publisher)
 
-  def publish_scenario(self, cars, people, sessions):
+  def publish_scenario(self, scenario):
     for p in self.sub_publishers:
-      p.publish_scenario(cars, people, sessions)
+      p.publish_scenario(scenario)
 
   def publish_stats(self, count, best, mean, std_dev):
     for p in self.sub_publishers:
