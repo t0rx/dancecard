@@ -7,13 +7,16 @@ class MQTTClient(object):
   def __init__(self, args):
     self.node_id = new_node_id()
     self.root_topic = args.mqtt_topic
+    status_topic = self.root_topic + '/' + self.node_id + '/status'
 
     self.client = mqtt.Client()
     host, port = split_host_port(args.mqtt_host, 1883)
+    self.client.will_set(status_topic, 'dead', retain=True)
     print("Connecting to MQTT broker at %s:%d under topic '%s' for node %s" % (host, port, self.root_topic, self.node_id))
     self.client.connect(host, port=port)
     self.client.loop_start()
     self.client.subscribe(self.root_topic + '/#', qos=1)
+    self.client.publish(status_topic, 'alive', retain=True)
 
   def publishYaml(self, subtopic, data, retain=False):
     self.client.publish(self.root_topic + '/' + subtopic, yaml.dump(data), retain=retain)
