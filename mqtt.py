@@ -4,13 +4,12 @@ from output import Publisher, format_dance
 from util import new_node_id, split_host_port
 
 class MQTTClient(object):
-  def __init__(self, args):
+  def __init__(self, host, port, root_topic):
     self.node_id = new_node_id()
-    self.root_topic = args.mqtt_topic
+    self.root_topic = root_topic
     status_topic = self.root_topic + '/' + self.node_id + '/status'
 
     self.client = mqtt.Client()
-    host, port = split_host_port(args.mqtt_host, 1883)
     self.client.will_set(status_topic, 'dead', retain=True)
     print("Connecting to MQTT broker at %s:%d under topic '%s' for node %s" % (host, port, self.root_topic, self.node_id))
     self.client.connect(host, port=port)
@@ -26,6 +25,15 @@ class MQTTClient(object):
 
   def stop_loop(self):
     self.client.loop_stop()
+
+  @staticmethod
+  def from_args(args):
+    if args.mqtt_host:
+      host, port = split_host_port(args.mqtt_host, 1883)
+      root_topic = args.mqtt_topic
+      return MQTTClient(host, port, root_topic)
+    else:
+      return None
 
 
 class MQTTPublisher(Publisher):

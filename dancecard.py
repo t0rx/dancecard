@@ -87,26 +87,26 @@ def get_scenario(args, scenario_id = None):
   return Scenario(scenario_id, args.cars, args.cars * 2, args.sessions)
 
 def start(args):
-  if not args.mqtt_host:
-    print("Must specify MQTT host for start command.", file=sys.stderr)
+  mqtt_client = MQTTClient.from_args(args)
+  if not mqtt_client:
+    print("Must specify MQTT settings for start command.", file=sys.stderr)
     exit(1)
   scenario = get_scenario(args)
-  mqtt_client = MQTTClient(args)
   mqtt_client.publishYaml('control/active_scenario', scenario.to_dict(), retain=True)
   mqtt_client.stop_loop()
   print('Published scenario %s' + scenario.id)
 
 def stop(args):
-  if not args.mqtt_host:
-    print("Must specify MQTT host for start command.", file=sys.stderr)
+  mqtt_client = MQTTClient.from_args(args)
+  if not mqtt_client:
+    print("Must specify MQTT settings for start command.", file=sys.stderr)
     exit(1)
-  mqtt_client = MQTTClient(args)
   mqtt_client.publishYaml('control/active_scenario', {}, retain=True)
   mqtt_client.stop_loop()
   print('Published stop command.')
 
 def standalone(args):
-  mqtt_client = MQTTClient(args) if args.mqtt_host else None
+  mqtt_client = MQTTClient.from_args(args)
   publishers = get_publishers(args, mqtt_client)
   strategy_factory = lambda generator, scoring: strategies[args.strategy](args, generator, scoring)
   scenario = get_scenario(args)
@@ -117,10 +117,10 @@ def standalone(args):
     print('Interrupted', file=sys.stderr)
 
 def worker(args):
-  if not args.mqtt_host:
+  mqtt_client = MQTTClient.from_args(args)
+  if not mqtt_client:
     print("Must specify MQTT host for worker command.", file=sys.stderr)
     exit(1)
-  mqtt_client = MQTTClient(args)
   publishers = get_publishers(args, mqtt_client)
   strategy_factory = lambda generator, scoring: strategies[args.strategy](args, generator, scoring)
   worker = Worker(mqtt_client, strategy_factory, publishers)
