@@ -28,7 +28,14 @@ class MQTTClient(object):
 
   @staticmethod
   def from_args(args):
-    if args.mqtt_host:
+    if args.mqtt_config:
+      with open(args.mqtt_config) as stream:
+        config = yaml.load(stream)
+      host = config['host']
+      port = int(config.get('port', 1883))
+      root_topic = config.get('topic', 'dancecard')
+      return MQTTClient(host, port, root_topic)
+    elif args.mqtt_host:
       host, port = split_host_port(args.mqtt_host, 1883)
       root_topic = args.mqtt_topic
       return MQTTClient(host, port, root_topic)
