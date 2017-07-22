@@ -9,7 +9,7 @@ class Strategy(object):
   def __init__(self, name, random_dance_generator, scoring):
     self.name = name
     self._random_dance_generator = random_dance_generator
-    self._scoring = scoring
+    self.scoring = scoring
     self.best_candidate = None
 
   def startup(self):
@@ -30,6 +30,9 @@ class Strategy(object):
   def get_sample(self, size):
     return []
 
+  def import_dance(self, dance):
+    pass
+
   def generate_dance(self):
     return self._random_dance_generator()
 
@@ -44,7 +47,7 @@ class Strategy(object):
     return candidate
 
   def score(self, dance):
-    return self._scoring.score(dance)
+    return self.scoring.score(dance)
 
   def track_best(self, candidate):
     if self.best_candidate is None or candidate.scores.total_score > self.best_candidate.scores.total_score:

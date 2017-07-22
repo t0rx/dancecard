@@ -4,16 +4,19 @@ import random
 from scoring import Scoring
 from sessions import get_possible_sessions
 from threading import Event, Thread
+from strategy import Candidate
 
 status_frequency = 1000
 sample_size = 5
 
 class StrategyDriver(object):
   """Responsible for executing the strategy"""
-  def __init__(self, scenario, strategy_factory, publishers):
+  def __init__(self, scenario, strategy_factory, publishers, importer, import_frequency):
     self.scenario = scenario
     self.strategy_factory = strategy_factory
     self.publishers = publishers
+    self.importer = importer
+    self.import_frequency = import_frequency
     self.stop_event = Event()
     self.background_thread = None
   
@@ -35,20 +38,24 @@ class StrategyDriver(object):
       self.background_thread.join()
 
   def _run_strategy(self, strategy):
+    count = 0
     self.possible_sessions = get_possible_sessions(self.scenario)
     strategy.startup()
-    count = 0
     last_output = None
     while True:
+      if count % status_frequency == 0:
+        best, mean, std_dev = strategy.get_stats()
+        self.publishers.publish_stats(count, best, mean, std_dev)
+        self.publishers.publish_sample(self.scenario.id, strategy.get_sample(sample_size))
+      if self.import_frequency > 0 and count % self.import_frequency == 0:
+        import_dance = self.importer.get_import(self.scenario.id)
+        if import_dance:
+          strategy.import_dance(import_dance)
       strategy.iterate()
       if strategy.best_candidate != last_output:
         last_output = strategy.best_candidate
         print()
         self.publishers.publish_best(last_output)
-      if count % status_frequency == 0:
-        best, mean, std_dev = strategy.get_stats()
-        self.publishers.publish_stats(count, best, mean, std_dev)
-        self.publishers.publish_sample(self.scenario.id, strategy.get_sample(sample_size))
       count = count + 1
       if self.stop_event.is_set():
         break

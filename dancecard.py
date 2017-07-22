@@ -13,6 +13,7 @@ from sessions import Scenario
 from driver import StrategyDriver
 from worker import Worker
 from tracker import Tracker
+from importer import ImportSource, MQTTImporter
 
 random.seed()
 
@@ -32,6 +33,7 @@ def build_parser():
   group.add_argument('--mutation-rate', metavar='N', type=int, default=100, help='mutation rate, expressed as 1 in N (default 100)')
   group.add_argument('--fittest-selections', metavar='N', type=int, default=5, help='number of individuals to sample for best-of-n fittest selection strategy (default 5)')
   group.add_argument('--weakest-selections', metavar='N', type=int, default=5, help='number of individuals to sample for worst-of-n weakest selection strategy (default 5)')
+  group.add_argument('--import-frequency', metavar='N', type=int, default=0, help='if specified, will import a candidate from a remote worker every N iterations.')
 
   group = parser.add_argument_group('output controls')
   group.add_argument('--output-stats', action='store_true', help='outputs ongoing statistics to stderr')
@@ -118,7 +120,7 @@ def standalone(args):
   publishers = get_publishers(args, mqtt_client)
   strategy_factory = lambda generator, scoring: strategies[args.strategy](args, generator, scoring)
   scenario = get_scenario(args)
-  driver = StrategyDriver(scenario, strategy_factory, publishers)
+  driver = StrategyDriver(scenario, strategy_factory, publishers, ImportSource())
   try:
     driver.run_strategy()
   except KeyboardInterrupt:
@@ -127,8 +129,9 @@ def standalone(args):
 def worker(args):
   mqtt_client = get_mqtt(args, force=True, advertise_node=True)
   publishers = get_publishers(args, mqtt_client)
+  importer = MQTTImporter(mqtt_client)
   strategy_factory = lambda generator, scoring: strategies[args.strategy](args, generator, scoring)
-  worker = Worker(mqtt_client, strategy_factory, publishers)
+  worker = Worker(mqtt_client, strategy_factory, publishers, importer, args.import_frequency)
   worker.listen()
   wait_for_interrupt()
   worker.stop()

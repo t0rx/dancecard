@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 # Utility functions for outputting stuff
 import sys
 from sessions import Scenario
@@ -112,4 +114,15 @@ def format_session(session):
 
 def format_pair(pair):
   a, b = pair
-  return chr(a + 65) + chr(b + 65)
+  return chr(a + ord('A')) + chr(b + ord('A'))
+
+def decode_pair(s):
+  return [ord(s[0]) - ord('A'), ord(s[1]) - ord('A')]
+
+def decode_dance(s):
+  rows = s.split('\n')
+  data = [row.split(' ') for row in rows]
+  num_sessions = len(data[0])
+  # The format is oriented the other way around
+  dance = [[decode_pair(data[r][c]) for r in range(len(data))] for c in range(num_sessions)]
+  return dance

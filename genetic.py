@@ -17,9 +17,13 @@ class Genetic(Strategy):
   def iterate(self):
     pass
 
+  def import_dance(self, dance):
+    index = self.find_worst_index(5)
+    self.replace(index, dance)
+
   def get_sample(self, size):
     # Just use best-of-3 to make more likely to choose better ones
-    return [self.population[self.find_best_index(3)] for i in range(size)]
+    return [self.best_candidate] + [self.population[self.find_best_index(3)] for i in range(size)]
 
   def replace(self, index, new_dance):
     old_candidate = self.population[index]
