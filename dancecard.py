@@ -12,6 +12,7 @@ from util import new_scenario_id
 from sessions import Scenario
 from driver import StrategyDriver
 from worker import Worker
+from tracker import Tracker
 
 random.seed()
 
@@ -57,6 +58,8 @@ def build_parser():
 
   status_parser = subparsers.add_parser('status', help='show current status of a distributed calc')
   status_parser.add_argument('-f', '--follow', action='store_true', help='continues to monitor status')
+  status_parser.add_argument('--initial-pause', metavar='N', type=int, default=1, help='number of seconds to wait for data when not following')
+  status_parser.add_argument('--delay', metavar='N', type=int, default=5, help='number of seconds to wait between status output')
   command_parsers['status'] = status_parser
 
   worker_parser = subparsers.add_parser('worker', help='run as a worker node')
@@ -82,29 +85,33 @@ def main():
   else:
     standalone(args)
 
-def get_scenario(args, scenario_id = None):
-  if not scenario_id:
-    scenario_id = new_scenario_id()
-  return Scenario(scenario_id, args.cars, args.cars * 2, args.sessions)
-
 def start(args):
-  mqtt_client = MQTTClient.from_args(args)
-  if not mqtt_client:
-    print("Must specify MQTT settings for start command.", file=sys.stderr)
-    exit(1)
+  mqtt_client = get_mqtt(args, force=True)
   scenario = get_scenario(args)
   mqtt_client.publishYaml('control/active_scenario', scenario.to_dict(), retain=True)
   mqtt_client.stop_loop()
   print('Published scenario %s' + scenario.id)
 
 def stop(args):
-  mqtt_client = MQTTClient.from_args(args)
-  if not mqtt_client:
-    print("Must specify MQTT settings for start command.", file=sys.stderr)
-    exit(1)
+  mqtt_client = get_mqtt(args, force=True)
   mqtt_client.publishYaml('control/active_scenario', {}, retain=True)
   mqtt_client.stop_loop()
   print('Published stop command.')
+
+def status(args):
+  mqtt_client = get_mqtt(args, force=True)
+  tracker = Tracker(mqtt_client, args.initial_pause)
+  tracker.listen()
+  tracker.print()
+  if args.follow:
+    try:
+      # Just loop until we get killed
+      while True:
+        sleep(args.delay)
+        print()
+        tracker.print()
+    except KeyboardInterrupt:
+      print('Keyboard interrupt.  Stopping.')
 
 def standalone(args):
   mqtt_client = MQTTClient.from_args(args)
@@ -118,21 +125,33 @@ def standalone(args):
     print('Interrupted', file=sys.stderr)
 
 def worker(args):
-  mqtt_client = MQTTClient.from_args(args)
-  if not mqtt_client:
-    print("Must specify MQTT host for worker command.", file=sys.stderr)
-    exit(1)
+  mqtt_client = get_mqtt(args, force=True, advertise_node=True)
   publishers = get_publishers(args, mqtt_client)
   strategy_factory = lambda generator, scoring: strategies[args.strategy](args, generator, scoring)
   worker = Worker(mqtt_client, strategy_factory, publishers)
   worker.listen()
+  wait_for_interrupt()
+  worker.stop()
+
+def wait_for_interrupt():
   try:
     # Just loop until we get killed
     while True:
       sleep(100)
   except KeyboardInterrupt:
     print('Keyboard interrupt.  Stopping.')
-    worker.stop()
+
+def get_scenario(args, scenario_id = None):
+  if not scenario_id:
+    scenario_id = new_scenario_id()
+  return Scenario(scenario_id, args.cars, args.cars * 2, args.sessions)
+
+def get_mqtt(args, force = False, advertise_node=False):
+  mqtt_client = MQTTClient.from_args(args, advertise_node)
+  if force and not mqtt_client:
+    print("Must specify MQTT settings for %s command." % args.command, file=sys.stderr)
+    exit(1)
+  return mqtt_client
 
 def get_publishers(args, mqtt_client=None):
   publishers = output.Multipublisher()

@@ -15,6 +15,7 @@ class Worker(object):
     self.lock = threading.RLock()
 
   def listen(self):
+    self.mqtt_client.publish_status('idle')
     self.mqtt_client.subscribe('control/active_scenario', self._received_scenario_message)
     print('Listening for new scenarios', file=sys.stderr)
 
@@ -31,9 +32,11 @@ class Worker(object):
       if obj == {}:
         print("Received no active scenario", file=sys.stderr)
         self._stop_running_scenario()
+        self.mqtt_client.publish_status('idle')
         print("Waiting for new scenario", file=sys.stderr)
       else:
         scenario = Scenario.from_dict(obj)
+        self.mqtt_client.publish_status('active')
         self._run_new_scenario(scenario)
     except Exception as e:
       print("Exception processing message - ignoring: %s" % str(e), file=sys.stderr)

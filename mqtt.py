@@ -4,43 +4,54 @@ from output import Publisher, format_dance
 from util import new_node_id, split_host_port
 
 class MQTTClient(object):
-  def __init__(self, host, port, root_topic):
+  def __init__(self, host, port, root_topic, advertise_node=False):
     self.node_id = new_node_id()
     self.root_topic = root_topic
-    status_topic = self.root_topic + '/' + self.node_id + '/status'
+    self.status_topic = self.root_topic + '/' + self.node_id + '/status'
 
     self.client = mqtt.Client()
-    self.client.will_set(status_topic, 'dead', retain=True)
+    if advertise_node:
+      self.client.will_set(self.status_topic, 'dead', retain=True)
     print("Connecting to MQTT broker at %s:%d under topic '%s' for node %s" % (host, port, self.root_topic, self.node_id))
     self.client.connect(host, port=port)
     self.client.loop_start()
     self.client.subscribe(self.root_topic + '/#', qos=1)
-    self.client.publish(status_topic, 'alive', retain=True)
+    if advertise_node:
+      self.publish_status('started')
 
   def publishYaml(self, subtopic, data, retain=False):
     self.client.publish(self.root_topic + '/' + subtopic, yaml.dump(data), retain=retain)
 
+  def publish_status(self, status):
+    self.client.publish(self.status_topic, status, retain=True)
+
   def subscribe(self, subtopic, callback):
-    self.client.message_callback_add(self.root_topic + '/' + subtopic, lambda client, userdata, message: callback(message))
+    # Callback should take a single param of the message
+    simple_callback = lambda client, userdata, message: callback(message)
+    self.client.message_callback_add(self.root_topic + '/' + subtopic, simple_callback)
 
   def stop_loop(self):
     self.client.loop_stop()
 
   @staticmethod
-  def from_args(args):
+  def from_args(args, advertise_node=False):
     if args.mqtt_config:
-      with open(args.mqtt_config) as stream:
-        config = yaml.load(stream)
-      host = config['host']
-      port = int(config.get('port', 1883))
-      root_topic = config.get('topic', 'dancecard')
-      return MQTTClient(host, port, root_topic)
+      return MQTTClient.from_file(args.mqtt_config)
     elif args.mqtt_host:
       host, port = split_host_port(args.mqtt_host, 1883)
       root_topic = args.mqtt_topic
-      return MQTTClient(host, port, root_topic)
+      return MQTTClient(host, port, root_topic, advertise_node)
     else:
       return None
+
+  @staticmethod
+  def from_file(filename, advertise_node=False):
+    with open(filename) as stream:
+      config = yaml.load(stream)
+    host = config['host']
+    port = int(config.get('port', 1883))
+    root_topic = config.get('topic', 'dancecard')
+    return MQTTClient(host, port, root_topic, advertise_node)
 
 
 class MQTTPublisher(Publisher):
