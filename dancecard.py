@@ -88,13 +88,13 @@ def main():
 def start(args):
   mqtt_client = get_mqtt(args, force=True)
   scenario = get_scenario(args)
-  mqtt_client.publishYaml('control/active_scenario', scenario.to_dict(), retain=True)
+  mqtt_client.publish_yaml('control/active_scenario', scenario.to_dict(), retain=True)
   mqtt_client.stop_loop()
   print('Published scenario %s' + scenario.id)
 
 def stop(args):
   mqtt_client = get_mqtt(args, force=True)
-  mqtt_client.publishYaml('control/active_scenario', {}, retain=True)
+  mqtt_client.publish_yaml('control/active_scenario', {}, retain=True)
   mqtt_client.stop_loop()
   print('Published stop command.')
 

@@ -19,7 +19,7 @@ class MQTTClient(object):
     if advertise_node:
       self.publish_status('started')
 
-  def publishYaml(self, subtopic, data, retain=False):
+  def publish_yaml(self, subtopic, data, retain=False):
     self.client.publish(self.root_topic + '/' + subtopic, yaml.dump(data), retain=retain)
 
   def publish_status(self, status):
@@ -60,7 +60,7 @@ class MQTTPublisher(Publisher):
     self.node_id = mqttClient.node_id
 
   def publish(self, subtopic, data, retain=False):
-    self.client.publishYaml(self.node_id + '/' + subtopic, data, retain=retain)
+    self.client.publish_yaml(self.node_id + '/' + subtopic, data, retain=retain)
 
   def publish_scenario(self, scenario):
     self.publish('scenario', scenario.to_dict(), retain=True)
@@ -72,6 +72,11 @@ class MQTTPublisher(Publisher):
   def publish_best(self, best):
     data = {'score': best.scores.total_score, 'dance': format_dance(best.dance)}
     self.publish('best', data, retain=True)
+
+  def publish_sample(self, scenario_id, sample):
+    dances = [format_dance(candidate.dance) for candidate in sample]
+    m = {'scenario': scenario_id, 'dances': dances}
+    self.publish('sample', m, retain=True)
 
   def publish_settings(self, settings):
     self.publish('settings', settings, retain=True)

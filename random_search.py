@@ -12,3 +12,6 @@ class RandomSearch(Strategy):
     """Simply randomly generate a new dance and keep track of the best"""
     dance = self.generate_dance()
     self.create_and_track_candidate(dance)
+
+  def get_sample(self, size):
+    return [self.best_candidate] * size

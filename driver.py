@@ -6,6 +6,7 @@ from sessions import get_possible_sessions
 from threading import Event, Thread
 
 status_frequency = 1000
+sample_size = 5
 
 class StrategyDriver(object):
   """Responsible for executing the strategy"""
@@ -47,10 +48,11 @@ class StrategyDriver(object):
       if count % status_frequency == 0:
         best, mean, std_dev = strategy.get_stats()
         self.publishers.publish_stats(count, best, mean, std_dev)
+        self.publishers.publish_sample(self.scenario.id, strategy.get_sample(sample_size))
       count = count + 1
       if self.stop_event.is_set():
         break
- 
+
   def _generate_random_dance(self):
     num_sessions = self.scenario.num_sessions
     sessions = len(self.possible_sessions)

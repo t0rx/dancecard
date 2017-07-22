@@ -27,6 +27,9 @@ class Strategy(object):
     # best score, mean, std dev
     return self.best_candidate.scores.total_score, self.best_candidate.scores.total_score, 0
 
+  def get_sample(self, size):
+    return []
+
   def generate_dance(self):
     return self._random_dance_generator()
 

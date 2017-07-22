@@ -12,6 +12,9 @@ class Publisher(object):
   def publish_best(self, best):
     pass
 
+  def publish_sample(self, scenario_id, sample):
+    pass
+
   def publish_settings(self, settings):
     pass
 
@@ -84,6 +87,10 @@ class Multipublisher(Publisher):
   def publish_best(self, best):
     for p in self.sub_publishers:
       p.publish_best(best)
+
+  def publish_sample(self, scenario_id, sample):
+    for p in self.sub_publishers:
+      p.publish_sample(scenario_id, sample)
 
   def publish_settings(self, settings):
     for p in self.sub_publishers:
