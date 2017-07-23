@@ -7,7 +7,7 @@ from scoring import Scoring
 from random_search import RandomSearch
 from incremental_genetic import IncrementalGenetic
 import output
-from mqtt import MQTTPublisher, MQTTClient
+from mqtt import MQTTPublisher, MQTTClient, MQTTConfig
 from util import new_scenario_id
 from sessions import Scenario
 from driver import StrategyDriver
@@ -116,11 +116,11 @@ def status(args):
       print('Keyboard interrupt.  Stopping.')
 
 def standalone(args):
-  mqtt_client = MQTTClient.from_args(args)
+  mqtt_client = get_mqtt(args)
   publishers = get_publishers(args, mqtt_client)
   strategy_factory = lambda generator, scoring: strategies[args.strategy](args, generator, scoring)
   scenario = get_scenario(args)
-  driver = StrategyDriver(scenario, strategy_factory, publishers, ImportSource())
+  driver = StrategyDriver(scenario, strategy_factory, publishers, ImportSource(), args.import_frequency)
   try:
     driver.run_strategy()
   except KeyboardInterrupt:
@@ -144,17 +144,17 @@ def wait_for_interrupt():
   except KeyboardInterrupt:
     print('Keyboard interrupt.  Stopping.')
 
-def get_scenario(args, scenario_id = None):
+def get_scenario(args, scenario_id=None):
   if not scenario_id:
     scenario_id = new_scenario_id()
   return Scenario(scenario_id, args.cars, args.cars * 2, args.sessions)
 
-def get_mqtt(args, force = False, advertise_node=False):
-  mqtt_client = MQTTClient.from_args(args, advertise_node)
-  if force and not mqtt_client:
+def get_mqtt(args, force=False, advertise_node=False):
+  config = MQTTConfig.from_args(args)
+  if force and not config:
     print("Must specify MQTT settings for %s command." % args.command, file=sys.stderr)
     exit(1)
-  return mqtt_client
+  return MQTTClient(config, advertise_node) if config else None
 
 def get_publishers(args, mqtt_client=None):
   publishers = output.Multipublisher()
