@@ -39,10 +39,7 @@ def build_parser():
   group.add_argument('--output-stats', action='store_true', help='outputs ongoing statistics to stderr')
   group.add_argument('--score-details', action='store_true', help='outputs details of score calculation with each dance card')
 
-  mqtt_group = parser.add_argument_group('MQTT settings')
-  mqtt_group.add_argument('--mqtt-config', metavar='filename', help='If specified, this will cause the process to connect to the MQTT broker using configuration from the specified yaml file.')
-  mqtt_group.add_argument('--mqtt-host', metavar='host[:port]', help='MQTT broker host[:port].  If specified, this will cause the process to connect to the MQTT broker and publish state information')
-  mqtt_group.add_argument('--mqtt-topic', metavar='topic', default='dancecard', help='root topic for MQTT, below which nodes will publish state (default "dancecard")')
+  MQTTConfig.add_argument_group(parser)
 
   command_parsers = {}
   subparsers = parser.add_subparsers(dest='command', help='sub-commands')

@@ -1,8 +1,10 @@
+import argparse
+import os
 import time
 
 def split_host_port(hostport, defaultPort):
   if ':' in hostport:
-    host, port = host.split(':')
+    host, port = hostport.split(':')
     port = int(port)
   else:
     host = hostport
@@ -27,3 +29,11 @@ def new_id():
       s.append(ALPHABET[r])
       if n == 0: break
   return ''.join(reversed(s))
+
+def extant_file(x):
+    """
+    'Type' for argparse - checks that file exists but does not open.
+    """
+    if not os.path.exists(x):
+        raise argparse.ArgumentTypeError('file "{0}" does not exist'.format(x))
+    return x

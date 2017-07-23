@@ -1,7 +1,8 @@
-import yaml
+import os
 import paho.mqtt.client as mqtt
+import yaml
 from output import Publisher, format_dance
-from util import new_node_id, split_host_port
+from util import new_node_id, split_host_port, extant_file
 
 class MQTTClient(object):
   def __init__(self, config, advertise_node=False):
@@ -35,19 +36,39 @@ class MQTTClient(object):
 
 
 class MQTTConfig(object):
-  def __init__(self, host, port, root_topic):
+  def __init__(self, host=None, port=1883, root_topic='dancecard'):
     self.host = host
     self.port = port
     self.root_topic = root_topic
 
+  def __repr__(self):
+    return "MQTTConfig(host=%s, port=%d, root_topic='%s')" % (repr(self.host), self.port, self.root_topic)
+
+  @staticmethod
+  def add_argument_group(parser):
+    mqtt_group = parser.add_argument_group('MQTT settings', 'use these arguments to connect to an MQTT broken for publication of status and control of worker nodes.  By default, dancecard will look for the presence of mqtt-config.yaml in the working directory or in /etc/dancecard.  Individual command-line arguments will override parameters loaded from a config file.')
+    mqtt_group.add_argument('--mqtt-config', metavar='filename', type=extant_file, help='if specified, use this file for MQTT connection settings.')
+    mqtt_group.add_argument('--mqtt-host', metavar='host[:port]', help='MQTT broker host[:port].')
+    mqtt_group.add_argument('--mqtt-topic', metavar='topic', help='root topic for MQTT, below which nodes will publish state (default "dancecard")')
+
   @staticmethod
   def from_args(args):
+    config = MQTTConfig()
     if args.mqtt_config:
-      return MQTTConfig.from_file(args.mqtt_config)
-    elif args.mqtt_host:
-      host, port = split_host_port(args.mqtt_host, 1883)
-      root_topic = args.mqtt_topic
-      return MQTTConfig(host, port, root_topic)
+      config = MQTTConfig.from_file(args.mqtt_config)
+    elif os.path.exists('./mqtt-config.yaml'):
+      config = MQTTConfig.from_file('./mqtt-config.yaml')
+    elif os.path.exists('/etc/dancecard/mqtt-config.yaml'):
+      config = MQTTConfig.from_file('/etc/dancecard/mqtt-config.yaml')
+
+    # Override with command-line args
+    if args.mqtt_host:
+      config.host, config.port = split_host_port(args.mqtt_host, 1883)
+    if args.mqtt_topic:
+      config.root_topic = args.mqtt_topic
+
+    if config.host:     # If no MQTT config at all then host will still be None
+      return config
     else:
       return None
 
