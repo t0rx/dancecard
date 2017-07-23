@@ -37,3 +37,27 @@ def extant_file(x):
     if not os.path.exists(x):
         raise argparse.ArgumentTypeError('file "{0}" does not exist'.format(x))
     return x
+
+def hyphen_to_underscore(map):
+  return {k.replace('-', '_'): v for k, v in map.items()}
+
+class MapNamespace(object):
+  """
+  Allows a map to be used like a namespace, but returns None for missing names.
+  """
+  def __init__(self, map):
+    self.map = map.copy()
+
+  def __getattr__(self, name):
+    return self.map.get(name)
+
+  def __iter__(self):
+    return self.map.__iter__()
+
+  def merge(self, map, allow_nones=False):
+    if not allow_nones:
+      map = {k: v for k, v in map.items() if v is not None}
+    self.map.update(map)
+
+  def __repr__(self):
+    return 'MapNamespace(%s)' % self.map

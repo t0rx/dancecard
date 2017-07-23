@@ -1,0 +1,9 @@
+# All params are optional
+cars: 4
+sessions: 12
+
+strategy: incrementalGenetic
+population: 10000
+mutation-rate: 100
+
+import-frequency: 100
