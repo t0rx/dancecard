@@ -25,6 +25,7 @@ class StrategyDriver(object):
     strategy = self.strategy_factory(self._generate_random_dance, scoring)
     self.publishers.publish_scenario(self.scenario)
     self.publishers.publish_settings(strategy.get_settings())
+    self.publishers.publish_stats(0, 0, 0, 0)
     if background:
       self.background_thread = Thread(target=self._run_strategy, args=(strategy,))
       self.background_thread.daemon = True
