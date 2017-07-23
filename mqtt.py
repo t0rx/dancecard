@@ -27,7 +27,7 @@ class MQTTClient(object):
       self.publish_status('started')
 
   def publish_yaml(self, subtopic, data, retain=False):
-    self.client.publish(self.root_topic + '/' + subtopic, yaml.dump(data), retain=retain)
+    self.client.publish(self.root_topic + '/' + subtopic, yaml.dump(data), qos=1, retain=retain)
 
   def publish_status(self, status):
     self.client.publish(self.status_topic, status, retain=True)
