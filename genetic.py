@@ -23,7 +23,7 @@ class Genetic(Strategy):
 
   def get_sample(self, size):
     # Just use best-of-3 to make more likely to choose better ones
-    return [self.best_candidate] + [self.population[self.find_best_index(3)] for i in range(size)]
+    return [self.best_candidate] + [self.population[self.find_best_index(3)] for i in range(size - 1)]
 
   def replace(self, index, new_dance):
     old_candidate = self.population[index]

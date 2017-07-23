@@ -1,4 +1,8 @@
 #!/bin/bash
+set -e
+IMAGE=dancecard
+DOCKERUSER=t0rx
+DATE=`date +%F`
 
 if [ "$1" == "help" ] || [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
   echo "Detects whether on Pi or not and uses Dockerfile-rpi or Dockerfile accordingly."
@@ -6,11 +10,8 @@ if [ "$1" == "help" ] || [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
   exit 0
 fi
 
-set -e
-
-IMAGE=dancecard
-DOCKERUSER=t0rx
-DATE=`date +%F`
+echo "Running unit tests"
+python3 -m unittest discover
 
 if ! docker info >/dev/null 2>&1 ; then
    echo "Must run under sudo"
