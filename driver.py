@@ -1,6 +1,7 @@
 
 import sys
 import random
+from time import time
 from scoring import Scoring
 from sessions import get_possible_sessions
 from threading import Event, Thread
@@ -8,6 +9,7 @@ from strategy import Candidate
 
 status_frequency = 1000
 sample_size = 5
+publish_throttle = 2    # Seconds
 
 class StrategyDriver(object):
   """Responsible for executing the strategy"""
@@ -43,11 +45,13 @@ class StrategyDriver(object):
     self.possible_sessions = get_possible_sessions(self.scenario)
     strategy.startup()
     last_output = None
+    next_time = time()
     while True:
-      if count % status_frequency == 0:
+      if count % status_frequency == 0 and time() > next_time:
         best, mean, std_dev = strategy.get_stats()
         self.publishers.publish_stats(count, best, mean, std_dev)
         self.publishers.publish_sample(self.scenario.id, strategy.get_sample(sample_size))
+        next_time = next_time + publish_throttle
       if self.import_frequency > 0 and count % self.import_frequency == 0:
         import_dance = self.importer.get_import(self.scenario.id)
         if import_dance:
