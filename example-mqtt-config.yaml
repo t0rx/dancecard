@@ -1,3 +1,6 @@
 host: localhost
-port: 1883          # Optional
-topic: dancecard    # Optional
+#port: 1883                                     # Optional, defaults to 1883
+#topic: dancecard                               # Optional, defaults to dancecard
+#ca-certs: /etc/ssl/certs/ca-certificates.crt   # Optional, enables TLS
+#username: Bob                                  # Optional, used to authenticate with broker
+#password: doNotShare                           # Optional, used to authenticate with broker
