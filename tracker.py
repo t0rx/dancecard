@@ -7,21 +7,40 @@ class State(object):
   """Mutuble object to hold current state"""
   def __init__(self):
     self.active_scenario = {}
+    self.last_scenario = {}
     self.nodes = {}
 
-  def print(self):
-    if self.active_scenario:
-      print('Active scenario: %s' % str(self.active_scenario))
-    else:
-      print('Active scenario: None')
+  def print(self, output_csv):
+    if self.active_scenario != self.last_scenario:
+      self.last_scenario = self.active_scenario
+
+      if self.active_scenario:
+        print('Active scenario: %s' % str(self.active_scenario))
+        print()
+        self.print_csv_headers()
+      elif not output_csv:
+        print('Active scenario: None')
     
     for id in sorted(self.nodes.keys()):
-      node = self.nodes[id]
-      node_desc = '%s (%s)' % (node.id, node.name) if node.name else '%s' % (node.id)
-      if node.status == 'active':
-        print('Node %s: %s' % (node_desc, node.stats))
-      elif node.status != 'dead':
-        print('Node %s: %s' % (node_desc, node.status))
+      if output_csv:
+        self.print_node_csv(self.nodes[id])
+      else:
+        self.print_node(self.nodes[id])
+
+  def print_node(self, node):
+    node_desc = '%s (%s)' % (node.id, node.name) if node.name else '%s' % (node.id)
+    if node.status == 'active':
+      print('Node %s: %s' % (node_desc, node.stats))
+    elif node.status != 'dead':
+      print('Node %s: %s' % (node_desc, node.status))
+
+  def print_csv_headers(self):
+    print('Node ID, Name, Count, Best, Mean, Std dev')
+
+  def print_node_csv(self, node):
+    node_name = node.name or ''
+    if node.status == 'active' and 'count' in node.stats:
+      print('%s, %s, %d, %f, %f, %f' % (node.id, node.name or '', node.stats['count'], node.stats['best'], node.stats['mean'], node.stats['std_dev']))
 
   def node(self, id):
     n = self.nodes.get(id)
@@ -38,9 +57,10 @@ class Node(object):
     self.stats = {}
 
 class Tracker(object):
-  def __init__(self, mqtt_client, initial_pause):
+  def __init__(self, mqtt_client, initial_pause, output_csv):
     self.mqtt_client = mqtt_client
     self.initial_pause = initial_pause
+    self.output_csv = output_csv
     self.state = State()
     self.lock = threading.RLock()
 
@@ -49,7 +69,7 @@ class Tracker(object):
     sleep(self.initial_pause)
 
   def print(self):
-    self.state.print()
+    self.state.print(self.output_csv)
 
   def _received_message(self, message):
     topic = message.topic

@@ -73,6 +73,7 @@ def build_parser():
   status_parser.add_argument('-f', '--follow', action='store_true', help='continues to monitor status')
   status_parser.add_argument('--initial-pause', metavar='N', type=int, help='number of seconds to wait for data when not following')
   status_parser.add_argument('--delay', metavar='N', type=int, help='number of seconds to wait between status output')
+  status_parser.add_argument('--csv', action='store_true', help='output as CSV for import into Excel or similar')
   command_parsers['status'] = status_parser
 
   worker_parser = subparsers.add_parser('worker', help='run as a worker node')
@@ -115,7 +116,7 @@ def stop(args):
 
 def status(args):
   mqtt_client = get_mqtt(args, force=True)
-  tracker = Tracker(mqtt_client, args.initial_pause)
+  tracker = Tracker(mqtt_client, args.initial_pause, args.csv)
   tracker.listen()
   tracker.print()
   if args.follow:
@@ -123,8 +124,10 @@ def status(args):
       # Just loop until we get killed
       while True:
         sleep(args.delay)
-        print()
+        if not args.csv:
+          print()
         tracker.print()
+        sys.stdout.flush()
     except KeyboardInterrupt:
       print('Keyboard interrupt.  Stopping.')
 
