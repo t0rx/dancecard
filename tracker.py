@@ -17,10 +17,11 @@ class State(object):
     
     for id in sorted(self.nodes.keys()):
       node = self.nodes[id]
+      node_desc = '%s (%s)' % (node.id, node.name) if node.name else '%s' % (node.id)
       if node.status == 'active':
-        print('Node %s: %s' % (node.id, node.stats))
+        print('Node %s: %s' % (node_desc, node.stats))
       elif node.status != 'dead':
-        print('Node %s: %s' % (node.id, node.status))
+        print('Node %s: %s' % (node_desc, node.status))
 
   def node(self, id):
     n = self.nodes.get(id)
@@ -33,6 +34,7 @@ class Node(object):
   def __init__(self, id):
     self.id = id
     self.status = 'unknown'
+    self.name = None
     self.stats = {}
 
 class Tracker(object):
@@ -71,6 +73,8 @@ class Tracker(object):
         node.status = message.payload.decode()
       elif subtopic == 'stats':
         node.stats = decode_yaml(message.payload, topic)
+      elif subtopic == 'name':
+        node.name = message.payload.decode()
       else:
         # Ignore
         pass

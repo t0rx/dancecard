@@ -76,6 +76,7 @@ def build_parser():
   command_parsers['status'] = status_parser
 
   worker_parser = subparsers.add_parser('worker', help='run as a worker node')
+  worker_parser.add_argument('--name', metavar='abc', help='optional human-friendly name to give to a worker node so identify it')
   command_parsers['worker'] = worker_parser
 
   return parser, command_parsers
@@ -102,13 +103,13 @@ def main():
 def start(args):
   mqtt_client = get_mqtt(args, force=True)
   scenario = get_scenario(args)
-  mqtt_client.publish_yaml('control/active_scenario', scenario.to_dict(), retain=True)
+  mqtt_client.publish_yaml('control/active_scenario', scenario.to_dict(), retain=True, as_root=True)
   mqtt_client.stop_loop()
   print('Published scenario %s' + scenario.id)
 
 def stop(args):
   mqtt_client = get_mqtt(args, force=True)
-  mqtt_client.publish_yaml('control/active_scenario', {}, retain=True)
+  mqtt_client.publish_yaml('control/active_scenario', {}, retain=True, as_root=True)
   mqtt_client.stop_loop()
   print('Published stop command.')
 
@@ -143,7 +144,7 @@ def worker(args):
   publishers = get_publishers(args, mqtt_client)
   importer = MQTTImporter(mqtt_client)
   strategy_factory = lambda generator, scoring: strategies[args.strategy](args, generator, scoring)
-  worker = Worker(mqtt_client, strategy_factory, publishers, importer, args.import_frequency)
+  worker = Worker(mqtt_client, strategy_factory, publishers, importer, args.import_frequency, args.name)
   worker.listen()
   wait_for_interrupt()
   worker.stop()

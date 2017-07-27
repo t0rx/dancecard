@@ -26,11 +26,15 @@ class MQTTClient(object):
     if advertise_node:
       self.publish_status('started')
 
-  def publish_yaml(self, subtopic, data, retain=False):
-    self.client.publish(self.root_topic + '/' + subtopic, yaml.dump(data), qos=1, retain=retain)
+  def publish(self, subtopic, data, retain=False, as_root=False):
+    topic = self.root_topic if as_root else self.root_topic + '/' + self.node_id
+    self.client.publish(topic + '/' + subtopic, data, qos=1, retain=retain)
+
+  def publish_yaml(self, subtopic, data, retain=False, as_root=False):
+    self.publish(subtopic, yaml.dump(data), retain=retain, as_root=as_root)
 
   def publish_status(self, status):
-    self.client.publish(self.status_topic, status, retain=True)
+    self.client.publish(self.status_topic, status, qos=1, retain=True)
 
   def subscribe(self, subtopic, callback):
     # Callback should take a single param of the message
@@ -110,7 +114,7 @@ class MQTTPublisher(Publisher):
     self.node_id = mqttClient.node_id
 
   def publish(self, subtopic, data, retain=False):
-    self.client.publish_yaml(self.node_id + '/' + subtopic, data, retain=retain)
+    self.client.publish_yaml(subtopic, data, retain=retain)
 
   def publish_scenario(self, scenario):
     self.publish('scenario', scenario.to_dict(), retain=True)

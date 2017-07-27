@@ -1,6 +1,7 @@
 # All params are optional
 cars: 4
 sessions: 12
+name: my-worker
 
 strategy: incrementalGenetic
 population: 10000
