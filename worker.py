@@ -6,13 +6,14 @@ from sessions import Scenario
 from driver import StrategyDriver
 
 class Worker(object):
-  def __init__(self, mqtt_client, strategy_factory, publishers, importer, import_frequency, worker_name):
+  def __init__(self, mqtt_client, strategy_factory, publishers, importer, import_frequency, worker_name, session_cache):
     self.mqtt_client = mqtt_client
     self.strategy_factory = strategy_factory
     self.publishers = publishers
     self.importer = importer
     self.import_frequency = import_frequency
     self.name = worker_name
+    self.session_cache = session_cache
     self.running_driver = None
     self.running_scenario = None
     self.lock = threading.RLock()
@@ -51,7 +52,7 @@ class Worker(object):
       self._stop_running_scenario()
       print('Starting new scenario %s' % scenario.id, file=sys.stderr)
       self.running_scenario = scenario      
-      self.running_driver = StrategyDriver(scenario, self.strategy_factory, self.publishers, self.importer, self.import_frequency)
+      self.running_driver = StrategyDriver(scenario, self.strategy_factory, self.publishers, self.importer, self.import_frequency, self.session_cache)
       self.running_driver.run_strategy(True)
 
   def _stop_running_scenario(self):

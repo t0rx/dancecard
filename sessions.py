@@ -1,5 +1,8 @@
 # Session generator
+import os
+import pickle
 import sys
+from util import hash_str
 
 class Scenario(object):
   def __init__(self, scenario_id, num_cars, num_people, num_sessions):
@@ -15,6 +18,10 @@ class Scenario(object):
   def from_dict(d):
     return Scenario(d['scenario'], int(d['cars']), int(d['people']), int(d['sessions']))
 
+  def hash_str(self):
+    d = self.to_dict()
+    d.pop('scenario')
+    return hash_str(d)
 
 def get_possible_sessions(scenario):
   print("Generating possible sessions... ", end="")
@@ -38,6 +45,31 @@ def get_possible_sessions(scenario):
       sessions.append(session)
   print("done.")
   return sessions
+
+class SessionCache(object):
+  def __init__(self, cache_dir):
+    self.cache_dir = cache_dir
+
+  def load_or_generate(self, scenario):
+    sessions = self._load_from_cache(scenario)
+    if not sessions:
+      sessions = get_possible_sessions(scenario)
+      self._save_to_cache(scenario, sessions)
+    return sessions
+
+  def _load_from_cache(self, scenario):
+    filename = self.cache_dir + '/' + scenario.hash_str()
+    if os.path.exists(filename):
+      with open(filename, 'rb') as file:
+        return pickle.load(file)
+    return None
+
+  def _save_to_cache(self, scenario, sessions):
+    if os.path.isdir(self.cache_dir):
+      filename = self.cache_dir + '/' + scenario.hash_str()
+      with open(filename, 'wb') as file:
+        pickle.dump(sessions, file)
+    pass
 
 def is_valid_session(session, num_people):
   people = [False] * num_people

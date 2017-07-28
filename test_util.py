@@ -58,5 +58,11 @@ class TestMisc(unittest.TestCase):
     m = {'a-b': 1, 'c_d': 2}
     self.assertEqual(hyphen_to_underscore(m), {'a_b': 1, 'c_d': 2})
 
+  def test_hash_str(self):
+    d = {'a': 2, 'b': 3}
+    s = hash_str(d)
+    self.assertTrue(isinstance(s, str))
+    self.assertTrue(len(s) > 16)
+
 if __name__ == '__main__':
   unittest.main()

@@ -13,12 +13,13 @@ publish_throttle = 2    # Seconds
 
 class StrategyDriver(object):
   """Responsible for executing the strategy"""
-  def __init__(self, scenario, strategy_factory, publishers, importer, import_frequency):
+  def __init__(self, scenario, strategy_factory, publishers, importer, import_frequency, session_cache):
     self.scenario = scenario
     self.strategy_factory = strategy_factory
     self.publishers = publishers
     self.importer = importer
     self.import_frequency = import_frequency
+    self.session_cache = session_cache
     self.stop_event = Event()
     self.background_thread = None
   
@@ -42,7 +43,7 @@ class StrategyDriver(object):
 
   def _run_strategy(self, strategy):
     count = 0
-    self.possible_sessions = get_possible_sessions(self.scenario)
+    self.possible_sessions = self.session_cache.load_or_generate(self.scenario)
     strategy.startup()
     last_output = None
     next_time = time()

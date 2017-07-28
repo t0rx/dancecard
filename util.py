@@ -1,6 +1,10 @@
 import argparse
+import codecs
+import hashlib
+import json
 import os
 import time
+
 
 def split_host_port(hostport, defaultPort):
   if ':' in hostport:
@@ -40,6 +44,10 @@ def extant_file(x):
 
 def hyphen_to_underscore(map):
   return {k.replace('-', '_'): v for k, v in map.items()}
+
+def hash_str(obj):
+  j = json.dumps(obj, sort_keys=True)
+  return codecs.encode(hashlib.md5(j.encode()).digest(), 'base64').decode().strip().replace('/', '_')
 
 class MapNamespace(object):
   """

@@ -11,7 +11,7 @@ from incremental_genetic import IncrementalGenetic
 import output
 from mqtt import MQTTPublisher, MQTTClient, MQTTConfig
 from util import new_scenario_id, extant_file, MapNamespace, hyphen_to_underscore
-from sessions import Scenario
+from sessions import Scenario, SessionCache
 from driver import StrategyDriver
 from worker import Worker
 from tracker import Tracker
@@ -41,6 +41,7 @@ def build_parser():
   parser.add_argument('--cars', metavar='N', type=int, help='number of cars (default is 4)')
   parser.add_argument('--sessions', metavar='N', type=int, help='number of sessions (default is 12)')
   parser.add_argument('--strategy', choices=strategy_names, help='strategy to use (default is incrementalGenetic)')
+  parser.add_argument('--cache', metavar='dir', help='optional directory to cache session permutations in order to improve startup time (default "./cache")')
 
   group = parser.add_argument_group('strategy-specific parameters')
   group.add_argument('--population', metavar='N', type=int, help='size of population for genetic strategies (default 10000)')
@@ -136,7 +137,8 @@ def standalone(args):
   publishers = get_publishers(args, mqtt_client)
   strategy_factory = lambda generator, scoring: strategies[args.strategy](args, generator, scoring)
   scenario = get_scenario(args)
-  driver = StrategyDriver(scenario, strategy_factory, publishers, ImportSource(), args.import_frequency)
+  session_cache = SessionCache(args.cache or './cache')
+  driver = StrategyDriver(scenario, strategy_factory, publishers, ImportSource(), args.import_frequency, session_cache)
   try:
     driver.run_strategy()
   except KeyboardInterrupt:
@@ -147,7 +149,8 @@ def worker(args):
   publishers = get_publishers(args, mqtt_client)
   importer = MQTTImporter(mqtt_client)
   strategy_factory = lambda generator, scoring: strategies[args.strategy](args, generator, scoring)
-  worker = Worker(mqtt_client, strategy_factory, publishers, importer, args.import_frequency, args.name)
+  session_cache = SessionCache(args.cache or './cache')
+  worker = Worker(mqtt_client, strategy_factory, publishers, importer, args.import_frequency, args.name, session_cache)
   worker.listen()
   wait_for_interrupt()
   worker.stop()
