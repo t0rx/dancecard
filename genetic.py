@@ -9,10 +9,13 @@ class Genetic(Strategy):
     self.population_size = population_size
 
   def startup(self):
-    self.population = self.generate_population()    # List of candidates
-    scores = [c.scores.total_score for c in self.population]
-    self.sumn = sum(scores)
-    self.sumn2 = sum([x * x for x in scores])
+    self._population = [None] * self.population_size
+    self.n = 0
+    self.sumn = 0
+    self.sumn2 = 0
+
+    # Create one candidate up-front to initialise best scores
+    self.get_candidate(0)
 
   def iterate(self):
     pass
@@ -21,18 +24,30 @@ class Genetic(Strategy):
     index = self.find_worst_index(5)
     self.replace(index, dance)
 
+  def get_candidate(self, index):
+    candidate = self._population[index]
+    if not candidate:
+      candidate = self.replace(index, self.generate_dance())
+    return candidate
+
   def get_sample(self, size):
     # Just use best-of-3 to make more likely to choose better ones
-    return [self.best_candidate] + [self.population[self.find_best_index(3)] for i in range(size - 1)]
+    return [self.best_candidate] + [self.get_candidate(self.find_best_index(3)) for i in range(size - 1)]
 
   def replace(self, index, new_dance):
-    old_candidate = self.population[index]
+    old_candidate = self._population[index]
     new_candidate = self.create_and_track_candidate(new_dance)
-    self.population[index] = new_candidate
+    self._population[index] = new_candidate
 
     # Update stats
-    self.sumn = self.sumn - old_candidate.scores.total_score + new_candidate.scores.total_score
-    self.sumn2 = self.sumn2 - (old_candidate.scores.total_score * old_candidate.scores.total_score) + (new_candidate.scores.total_score * new_candidate.scores.total_score)
+    if old_candidate:
+      self.sumn = self.sumn - old_candidate.scores.total_score
+      self.sumn2 = self.sumn2 - (old_candidate.scores.total_score * old_candidate.scores.total_score)
+    else:
+      self.n = self.n + 1
+    self.sumn = self.sumn + new_candidate.scores.total_score
+    self.sumn2 = self.sumn2 + (new_candidate.scores.total_score * new_candidate.scores.total_score)
+    return new_candidate
 
   def crossover_single_gene(self, dance1, dance2):
     """Creates two children by switching a single gene between the parents"""
@@ -77,8 +92,8 @@ class Genetic(Strategy):
 
   def get_stats(self):
     # best score, mean, std dev
-    mean = self.sumn / self.population_size
-    var = (self.sumn2 - (self.sumn * self.sumn / self.population_size)) / (self.population_size - 1)
+    mean = self.sumn / self.n
+    var = (self.sumn2 - (self.sumn * self.sumn / self.n)) / (self.n - 1) if self.n > 1 else 0
     std_dev = math.sqrt(var)
     return self.best_candidate.scores.total_score, mean, std_dev
 
@@ -88,7 +103,7 @@ class Genetic(Strategy):
     best_scores = None
     for i in range(num_selections):
       index = random.randrange(self.population_size)
-      scores = self.population[index].scores
+      scores = self.get_candidate(index).scores
       if best_index == -1 or scores.total_score > best_scores.total_score:
         best_index = index
         best_scores = scores
@@ -100,13 +115,8 @@ class Genetic(Strategy):
     best_scores = None
     for i in range(num_selections):
       index = random.randrange(self.population_size)
-      scores = self.population[index].scores
+      scores = self.get_candidate(index).scores
       if best_index == -1 or scores.total_score < best_scores.total_score:
         best_index = index
         best_scores = scores
     return best_index
-
-  def generate_population(self):
-    print("Generating initial population of size %s" % self.population_size)
-    return [self.create_and_track_candidate(self.generate_dance()) for i in range(self.population_size)]
-

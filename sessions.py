@@ -1,4 +1,5 @@
 # Session generator
+import sys
 
 class Scenario(object):
   def __init__(self, scenario_id, num_cars, num_people, num_sessions):
@@ -16,6 +17,8 @@ class Scenario(object):
 
 
 def get_possible_sessions(scenario):
+  print("Generating possible sessions... ", end="")
+  sys.stdout.flush()
   pairs = get_pairs(scenario.num_people)
   num_pairs = len(pairs)
   num_cars = scenario.num_cars
@@ -33,6 +36,7 @@ def get_possible_sessions(scenario):
     session = [pairs[i] for i in indices]
     if is_valid_session(session, scenario.num_people):
       sessions.append(session)
+  print("done.")
   return sessions
 
 def is_valid_session(session, num_people):

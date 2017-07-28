@@ -31,7 +31,7 @@ class IncrementalGenetic(Genetic):
     parent1 = self.find_best_index(self.fittest_selections)
     parent2 = self.find_best_index(self.fittest_selections)
     
-    child1, child2 = self.crossover(self.population[parent1].dance, self.population[parent2].dance)
+    child1, child2 = self.crossover(self.get_candidate(parent1).dance, self.get_candidate(parent2).dance)
     if random.randrange(self.mutation_rate) == 0:
       child1 = self.mutate(child1)
     if random.randrange(self.mutation_rate) == 0:
