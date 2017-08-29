@@ -1,0 +1,116 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="shared-styles.html">
+<link rel="import" href="driver-button.html">
+
+
+
+<dom-module id="driver-heatmap">
+  <script>
+
+  </script>
+  <template>
+    <style>
+      table,
+      th,
+      td {
+        text-align: center;
+      }
+      td.heat {
+        border: 1px solid black;
+        border-collapse: collapse;
+        width: 10px;
+      }
+      th {
+        transform: translate(0px, 20px) rotate(270deg);
+        height: 70px;
+        max-width: 24px;
+      }
+    </style>
+    <table style="table-layout: fixed">
+      <thead>
+        <tr>
+          <th></th>
+          <template is="dom-repeat" items="[[drivers]]">
+            <th>
+              <driver-button driver=[[item]]></driver-button>
+            </th>
+          </template>
+        </tr>
+      </thead>
+      <tbody>
+        <template is="dom-repeat" items="[[rev(drivers)]]" as="driver1">
+          <tr>
+            <td><driver-button driver=[[driver1]]></driver-button></td>
+            <template is="dom-repeat" items="[[drivers]]" as="driver2">
+              <td class="heat">
+                {{heat(driver1.index, driver2.index)}}
+              </td>
+            </template>
+          </tr>
+        </template>
+      </tbody>
+    </table>
+  </template>
+
+  <script>
+    class DriverHeatmap extends Polymer.Element {
+      static get is() { return "driver-heatmap"; }
+
+      static get properties() {
+        return {
+          drivers: {
+            type: Array
+          },
+          driverIndices: {
+            type: Array
+          },
+          matrix: {
+            type: Array
+          }
+        }
+      }
+
+      rev(arr) {
+        return arr.slice().reverse();
+      }
+
+      heat(x, y) {
+        return this.matrix[x][y];
+      }
+
+      constructor() {
+        super();
+        var drivers = [{ index: 0, name: "Greg", color: '#e57373' },    // --paper-red-300
+        { index: 1, name: "Yan", color: '#ba68c8' },     // --paper-purple-300
+        { index: 2, name: "Mike", color: '#64b5f6' },    // --paper-blue-300
+        { index: 3, name: "Alex", color: '#4db6ac' },    // --paper-green-300
+        { index: 4, name: "Juliet", color: '#81c784' },  // --paper-green-300
+        { index: 5, name: "Janet", color: '#dce775' },   // --paper-lime-300
+        { index: 6, name: "Adam", color: '#fff176' }, // --paper-yellow-300
+        { index: 7, name: "Andy", color: '#ff8a65' }] // --paper-deep-orange-300
+        var data = [
+          [[1, 2], [3, 4], [5, 6], [7, 0]],
+          [[3, 1], [6, 4], [7, 2], [0, 5]],
+          [[5, 7], [0, 2], [6, 4], [3, 1]]
+        ];
+        var matrix = Array(drivers.length);
+        for (var i = 0; i < drivers.length; i++) {
+          matrix[i] = Array(drivers.length).fill(0);
+        }
+        for (var i = 0; i < data.length; i++) {
+          let row = data[i];
+          for (var j = 0; j < row.length; j++) {
+            let pair = row[j];
+            matrix[pair[0]][pair[1]]++;
+            matrix[pair[1]][pair[0]]++;
+          }
+        }
+        this.set('drivers', drivers);
+        this.set('driverIndices', [0, 1, 2, 3, 4, 5, 6, 7]);
+        this.set('matrix', matrix);
+        this.matrix = matrix
+      }
+    }
+    customElements.define(DriverHeatmap.is, DriverHeatmap);
+  </script>
+</dom-module>

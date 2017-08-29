@@ -1,0 +1,75 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="shared-styles.html">
+<link rel="import" href="driver-button.html">
+
+
+
+<dom-module id="dance-schedule">
+  <template>
+    <style>
+      td {
+        text-align: center;
+        padding-left: 8px;
+        padding-right: 8px;
+      }
+    </style>
+    <table class="schedule">
+      <thead>
+        <tr>
+          <td>Car 1</td>
+          <td>Car 2</td>
+          <td>Car 3</td>
+          <td>Car 4</td>
+        </tr>
+      </thead>
+      <tbody>
+        <template is="dom-repeat" items="[[rows]]">
+          <tr>
+            <template is="dom-repeat" items="[[item]]">
+              <td>
+                <nobr>
+                  <driver-button driver=[[item.0]]></driver-button>
+                  <driver-button driver=[[item.1]]></driver-button>
+                </nobr>
+              </td>
+            </template>
+          </tr>
+        </template>
+      </tbody>
+    </table>
+  </template>
+
+  <script>
+    class DanceSchedule extends Polymer.Element {
+      static get is() { return "dance-schedule"; }
+
+      static get properties() {
+        return {
+          rows: {
+            type: Array
+          }
+        }
+      }
+
+      constructor() {
+        super();
+        var drivers = [{ name: "Greg", color: '#e57373' },    // --paper-red-300
+        { name: "Yan", color: '#ba68c8' },     // --paper-purple-300
+        { name: "Mike", color: '#64b5f6' },    // --paper-blue-300
+        { name: "Alex", color: '#4db6ac' },    // --paper-green-300
+        { name: "Juliet", color: '#81c784' },  // --paper-green-300
+        { name: "Janet", color: '#dce775' },   // --paper-lime-300
+        { name: "Adam", color: '#fff176' }, // --paper-yellow-300
+        { name: "Andy", color: '#ff8a65' }] // --paper-deep-orange-300
+        var data = [
+          [[1, 2], [3, 4], [5, 6], [7, 0]],
+          [[3, 1], [6, 4], [7, 2], [0, 5]],
+          [[5, 7], [0, 2], [6, 4], [3, 1]]
+        ];
+        var mapped = data.map(row => row.map(pair => [drivers[pair[0]], drivers[pair[1]]]))
+        this.set('rows', mapped);
+      }
+    }
+    customElements.define(DanceSchedule.is, DanceSchedule);
+  </script>
+</dom-module>

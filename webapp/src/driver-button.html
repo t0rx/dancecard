@@ -1,0 +1,35 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+
+<dom-module id="driver-button">
+  <template>
+    <style>
+      paper-button.driver {
+        font-size: 10pt;
+        padding: 0px;
+        margin: 0px;
+        text-transform: none;
+        color: black;
+      }
+    </style>
+
+    <paper-button toggles raised class="driver" style="background-color: [[driver.color]]">[[driver.name]]</paper-button>
+
+  </template>
+
+  <script>
+    class DriverButton extends Polymer.Element {
+      static get is() { return "driver-button"; }
+
+      static get properties() {
+        return {
+          driver: {
+            type: Object
+          }
+        }
+      }
+    }
+    customElements.define(DriverButton.is, DriverButton);
+  </script>
+</dom-module>
+

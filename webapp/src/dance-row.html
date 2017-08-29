@@ -1,0 +1,44 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="driver-pair.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+
+<dom-module id="dance-row">
+  <template>
+    <!-- <style is="custom-style">
+      .driver td {
+        padding-left: 10px;
+        padding-right: 10px;
+        white-space: nowrap;
+      }
+    </style> -->
+    <tr>
+      <template is="dom-repeat" items="[[pairs]]">
+        <td>
+          <driver-button>[[item.0]]</driver-button>
+          <driver-button>[[item.1]]</driver-button>
+        </td>
+      </template>
+    </tr>
+  </template>
+
+  <script>
+    class DanceRow extends Polymer.Element {
+      static get is() { return "dance-row"; }
+
+      static get properties() {
+        return {
+          pairs: {
+            type: Array,
+            value: []
+          }
+        }
+      }
+
+      constructor() {
+        super();
+        //this.set('pairs', [[1, 2], [3, 4], [5, 6], [7, 8]]);
+      }
+    }
+    customElements.define(DanceRow.is, DanceRow);
+  </script>
+</dom-module>

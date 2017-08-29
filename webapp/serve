@@ -1,0 +1,4 @@
+#!/bin/bash
+
+polymer serve -v -H 10.0.0.90
+
