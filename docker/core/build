@@ -1,0 +1,38 @@
+#!/bin/bash
+set -e
+
+if [ "$1" == "help" ] || [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
+  echo "Detects whether on Pi or not and uses Dockerfile-rpi or Dockerfile accordingly."
+  echo "Either use \"build\" by itself, or \"build push\" to also push to Dockerhub."
+  exit 0
+fi
+
+CURRENTDIR=`dirname "$(readlink -f "$0")"`
+IMAGE=dancecard
+DOCKERUSER=t0rx
+DATE=`date +%F`
+
+if ! docker info >/dev/null 2>&1 ; then
+   echo "Must run under sudo"
+   exit 1
+fi
+
+if [[ `uname -n` == raspberrypi* ]]; then
+  REPO=$DOCKERUSER/rpi-$IMAGE
+  DOCKERFILE=Dockerfile-rpi
+else
+  REPO=$DOCKERUSER/$IMAGE
+  DOCKERFILE=Dockerfile
+fi
+FROMLINE=(`grep FROM $DOCKERFILE`)
+BASEIMAGE=${FROMLINE[1]}
+
+echo Building $REPO:$DATE from $DOCKERFILE
+docker pull $BASEIMAGE  # Make sure we're up to date
+docker build -t $REPO:$DATE -f $CURRENTDIR/$DOCKERFILE ../..    # Docker context starting two dirs up so we can pull in the code
+docker tag $REPO:$DATE $REPO:latest
+
+if [ "$1" == "push" ]; then
+  docker push $REPO:$DATE
+  docker push $REPO:latest
+fi

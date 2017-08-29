@@ -1,38 +1,16 @@
 #!/bin/bash
 set -e
-IMAGE=dancecard
-DOCKERUSER=t0rx
-DATE=`date +%F`
 
 if [ "$1" == "help" ] || [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
-  echo "Detects whether on Pi or not and uses Dockerfile-rpi or Dockerfile accordingly."
-  echo "Either use \"build\" by itself, or \"build push\" to also push to Dockerhub."
+  echo "$1 [push]"
   exit 0
 fi
 
+CURRENTDIR=`dirname "$(readlink -f "$0")"`
+
 echo "Running unit tests"
+cd $CURRENTDIR/python
 python3 -m unittest discover
 
-if ! docker info >/dev/null 2>&1 ; then
-   echo "Must run under sudo"
-   exit 1
-fi
-
-if [[ `uname -n` == raspberrypi* ]]; then
-  REPO=$DOCKERUSER/rpi-$IMAGE
-  DOCKERFILE=Dockerfile-rpi
-else
-  REPO=$DOCKERUSER/$IMAGE
-  DOCKERFILE=Dockerfile
-fi
-FROMLINE=(`grep FROM $DOCKERFILE`)
-BASEIMAGE=${FROMLINE[1]}
-
-echo Building $REPO:$DATE from $DOCKERFILE
-docker pull $BASEIMAGE  # Make sure we're up to date
-docker build -t $REPO:$DATE -f $DOCKERFILE .
-docker tag $REPO:$DATE $REPO:latest
-
-if [ "$1" == "push" ]; then
-  docker push $REPO
-fi
+cd $CURRENTDIR/docker/core
+./build $1
